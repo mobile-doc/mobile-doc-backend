@@ -1,12 +1,11 @@
 steps:
-- name: "gcr.io/cloud-builders/gcloud"
-  args: [
-    "app", 
-    "deploy"
-  ]
-  env:
-  - 'PROJECT_ID=$PROJECT_ID'
-  - 'SHORT_SHA=$SHORT_SHA'
-  - 'BRANCH_NAME=$BRANCH_NAME'
-  - 'REPO_NAME=$REPO_NAME'
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args:
+      - 'app'
+      - 'deploy'
+      - 'app.yaml'
+      - '--project=$PROJECT_ID'
+      - '--set-env-vars=PROJECT_ID=${PROJECT_ID},\'
+      - 'SHORT_SHA=$SHORT_SHA'
+
 timeout: "1600s"

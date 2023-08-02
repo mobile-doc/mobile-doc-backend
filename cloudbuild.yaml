@@ -1,22 +1,10 @@
 steps:
-- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-  entrypoint: 'bash'
-  args: 
-   - '-c'
-   - |
-      sed -i "s/##_PROJECT_NAME##/$${ROJECT_NAME}/g" app.yaml
-      sed -i "s/##_VERSION_NAME##/$${VERSION_NAME}/g" app.yaml
-      sed -i "s/##_SHORT_SHA##/$${SHORT_SHA}/g" app.yaml
-      sed -i "s/##_BRANCH_NAME##/$${BRANCH_NAME}/g" app.yaml
-      sed -i "s/##_REPO_NAME##/$${REPO_NAME}/g" app.yaml
-      gcloud config set app/cloud_build_timeout 1600
-      gcloud app deploy
+# Step 1: Run create_env.py
+- name: "gcr.io/cloud-builders/python"
+  args: ["create_env.py"]
+timeout: "300s"
 
-timeout: '1600s'
-substitutions:
-  _PROJECT_NAME: ${_PROJECT_NAME}
-  _VERSION_NAME: ${_VERSION_NAME}
-  _SHORT_SHA: ${_SHORT_SHA}
-  _BRANCH_NAME: ${_BRANCH_NAME}
-  _REPO_NAME: ${_REPO_NAME}
-
+# Step 2: Deploy the app using gcloud app deploy
+- name: "gcr.io/cloud-builders/gcloud"
+  args: ["app", "deploy"]
+timeout: "1600s"

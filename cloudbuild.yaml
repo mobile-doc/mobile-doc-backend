@@ -1,11 +1,11 @@
 steps:
   - name: 'gcr.io/cloud-builders/python'
-      entrypoint: 'bash'
-      args:
-        - '-c'
-        - |
-          pip install -r requirements.txt
-          python create_env.py
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        pip install -r requirements.txt
+        python create_env.py
   - name: 'gcr.io/cloud-builders/gcloud'
     args:
       - 'app'

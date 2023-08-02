@@ -1,12 +1,18 @@
 steps:
+- name: 'ubuntu'
+  args: ['bash', './myscript.sh']
+  env:
+  - 'PROJECT_ID=$PROJECT_ID'
+  - 'SHORT_SHA=$SHORT_SHA'
+  - 'BRANCH_NAME=$BRANCH_NAME'
+  - 'REPO_NAME=$REPO_NAME'
+
+- name: "test env_vars"
+  args: ['echo', '$PROJECT_ID', '$SHORT_SHA', '$BRANCH_NAME', '$REPO_NAME']
+
 - name: "gcr.io/cloud-builders/gcloud"
   args: [
     "app", 
     "deploy"
   ]
 timeout: "1600s"
-substitutions:
-  PROJECT_ID: ${PROJECT_ID}
-  SHORT_SHA: ${SHORT_SHA}
-  BRANCH_NAME: ${BRANCH_NAME}
-  REPO_NAME: ${REPO_NAME}

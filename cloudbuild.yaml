@@ -18,5 +18,10 @@
       gcloud app deploy
 
 timeout: '1600s'
-# substitutions:
-#   _CONFIG_TYPE: ${_CONFIG_TYPE}
+substitutions:
+  _PROJECT_NAME: ${_PROJECT_NAME}
+  _VERSION_NAME: ${_VERSION_NAME}
+  _SHORT_SHA: ${_SHORT_SHA}
+  _BRANCH_NAME: ${_BRANCH_NAME}
+  _REPO_NAME: ${_REPO_NAME}
+

@@ -1,7 +1,15 @@
 steps:
 - name: "gcr.io/cloud-builders/gcloud"
-  args: ["app", "deploy"]
+  args: [
+    "app", 
+    "deploy",
+    "_ENV=${_ENV},\
+    PROJECT_ID=${PROJECT_ID},\
+    PROJECT_NAME=${PROJECT_NAME},\
+    VERSION_NAME=${VERSION_NAME},\
+    SHORT_SHA=${SHORT_SHA},\
+    BRANCH_NAME=${BRANCH_NAME},\
+    REPO_NAME=${REPO_NAME},\
+    TAG_NAME=${TAG_NAME}"
+  ]
 timeout: "1600s"
-substitutions:
-  - 'PROJECT_NAME=${_PROJECT_NAME}'
-  - 'VERSION_NAME=${_VERSION_NAME}'

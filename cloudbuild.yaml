@@ -2,9 +2,9 @@ steps:
 # Step 1: Run create_env.py
 - name: "gcr.io/cloud-builders/python"
   args: ["create_env.py"]
-timeout: "300s"
+  timeout: "300s"
 
 # Step 2: Deploy the app using gcloud app deploy
 - name: "gcr.io/cloud-builders/gcloud"
   args: ["app", "deploy"]
-timeout: "1600s"
+  timeout: "1600s"

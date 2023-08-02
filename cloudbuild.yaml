@@ -1,5 +1,5 @@
 steps:
-  - name: 'gcr.io/cloud-builders/python'
+  - name: 'gcr.io/cloud-builders/python:3.8'
     entrypoint: 'bash'
     args:
       - '-c'

@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from ..constants import VERSION_NAME, PROJECT_NAME
+from ..constants import VERSION_NAME, PROJECT_NAME, SHORT_SHA, BRANCH_NAME, REPO_NAME
 
 router = APIRouter()
 
@@ -13,5 +13,8 @@ async def root():
         "success": True,
         "project_name": PROJECT_NAME,
         "version_name": VERSION_NAME,
+        "SHORT_SHA": SHORT_SHA,
+        "BRANCH_NAME": BRANCH_NAME,
+        "REPO_NAME": REPO_NAME,
         "message": "Welcome to Mobile Docs Backend. Go to /docs for documentation",
     }

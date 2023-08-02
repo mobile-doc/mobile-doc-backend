@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from ..constants import *
+from ..constants import VERSION_NAME, PROJECT_NAME
 
 router = APIRouter()
 
@@ -11,5 +11,7 @@ router = APIRouter()
 async def root():
     return {
         "success": True,
+        "project_name": PROJECT_NAME,
+        "version_name": VERSION_NAME,
         "message": "Welcome to Mobile Docs Backend. Go to /docs for documentation",
     }

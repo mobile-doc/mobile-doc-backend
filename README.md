@@ -18,21 +18,17 @@
 > pip install -r requirements.txt 
 ```
 
-3. Run the FastAPI app using `bash run.sh`
+3. Create a new file called `secrets.env` on the root directory. This file will contain environment variables. 
 
-Developed By
+4. Run the FastAPI app using `bash run.sh`
 
-1805032 - Mahdee Mushfique Kamal
+## Developed By
 
-1805036 - Abu Humayed Azim Fahmid
+1805032 - Mahdee Mushfique Kamal - [MahdeeMushfiqueKamal](https://github.com/MahdeeMushfiqueKamal)
 
-1805038 - Iftekhar E Mahbub Zeeon
+1805050 - Khondker Salman Sayeed - [salkhon](https://github.com/salkhon)
 
-1805050 - Khondker Salman Sayeed
-
-1805053 - H.A.Z. Sameen Shahgir
-
-1805055 - Shamit Fatin
+1805053 - H.A.Z. Sameen Shahgir - [Patchwork53](https://github.com/Patchwork53)
 
 
 

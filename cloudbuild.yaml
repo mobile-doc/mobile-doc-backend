@@ -1,15 +1,22 @@
-steps:
-  - name: 'gcr.io/cloud-builders/python:3.8'
-    entrypoint: 'bash'
-    args:
-      - '-c'
-      - |
-        pip install -r requirements.txt
-        python create_env.py
-  - name: 'gcr.io/cloud-builders/gcloud'
-    args:
-      - 'app'
-      - 'deploy'
-      - 'app.yaml'
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  entrypoint: 'bash'
+  env-vars:
+   - PROJECT_NAME: ${_PROJECT_NAME}
+   - VERSION_NAME: ${_VERSION_NAME}
+   - SHORT_SHA: ${_SHORT_SHA}
+   - BRANCH_NAME: ${_BRANCH_NAME}
+   - REPO_NAME: ${_REPO_NAME}
+  args: 
+   - '-c'
+   - |
+      sed -i "s/##_PROJECT_NAME##/$${ROJECT_NAME}/g" app.yaml
+      sed -i "s/##_VERSION_NAME##/$${VERSION_NAME}/g" app.yaml
+      sed -i "s/##_SHORT_SHA##/$${SHORT_SHA}/g" app.yaml
+      sed -i "s/##_BRANCH_NAME##/$${BRANCH_NAME}/g" app.yaml
+      sed -i "s/##_REPO_NAME##/$${REPO_NAME}/g" app.yaml
+      gcloud config set app/cloud_build_timeout 1600
+      gcloud app deploy
 
-timeout: "1600s"
+timeout: '1600s'
+# substitutions:
+#   _CONFIG_TYPE: ${_CONFIG_TYPE}

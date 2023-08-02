@@ -8,6 +8,6 @@ steps:
     VERSION_NAME=${_VERSION_NAME},\
     SHORT_SHA=${SHORT_SHA},\
     BRANCH_NAME=${BRANCH_NAME},\
-    REPO_NAME=${REPO_NAME},
+    REPO_NAME=${REPO_NAME}
   ]
 timeout: "1600s"

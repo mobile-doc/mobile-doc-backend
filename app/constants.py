@@ -7,9 +7,9 @@ load_dotenv()
 PROJECT_NAME = os.getenv("PROJECT_NAME")
 VERSION_NAME = os.getenv("_VERSION_NAME")
 
-SHORT_SHA = os.getenv("_SHORT_SHA")
-BRANCH_NAME = os.getenv("_BRANCH_NAME")
-REPO_NAME = os.getenv("_REPO_NAME")
+GOOGLE_CLOUD_PROJECT = os.getenv("GOOGLE_CLOUD_PROJECT")
+GAE_VERSION = os.getenv("GAE_VERSION")
+GAE_MEMORY_MB = os.getenv("GAE_MEMORY_MB")
 
 
 PROJECT_NAME = "Dummy Project Name" if not PROJECT_NAME else PROJECT_NAME

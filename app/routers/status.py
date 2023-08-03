@@ -1,5 +1,11 @@
 from fastapi import APIRouter
-from ..constants import VERSION_NAME, PROJECT_NAME, SHORT_SHA, BRANCH_NAME, REPO_NAME
+from ..constants import (
+    VERSION_NAME,
+    PROJECT_NAME,
+    GOOGLE_CLOUD_PROJECT,
+    GAE_VERSION,
+    GAE_MEMORY_MB,
+)
 
 router = APIRouter()
 
@@ -13,8 +19,8 @@ async def root():
         "success": True,
         "project_name": PROJECT_NAME,
         "version_name": VERSION_NAME,
-        "SHORT_SHA": SHORT_SHA,
-        "BRANCH_NAME": BRANCH_NAME,
-        "REPO_NAME": REPO_NAME,
+        "GOOGLE_CLOUD_PROJECT": GOOGLE_CLOUD_PROJECT,
+        "GAE_VERSION": GAE_VERSION,
+        "GAE_MEMORY_MB": GAE_MEMORY_MB,
         "message": "Welcome to Mobile Docs Backend. Go to /docs for documentation",
     }

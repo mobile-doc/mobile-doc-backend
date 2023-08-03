@@ -2,7 +2,7 @@ steps:
 - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
   entrypoint: 'bash'
   env:
-   - ATLAS_USERNAME: ${_ATLAS_USERNAME}
+    - 'ATLAS_USERNAME=${_ATLAS_USERNAME}'
   args: 
    - '-c'
    - |

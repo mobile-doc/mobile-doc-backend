@@ -7,6 +7,3 @@ steps:
     "${_VERSION}"
   ]
   timeout: "1600s"
-
-includes:
-  - env_variables.yaml

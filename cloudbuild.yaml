@@ -3,7 +3,7 @@ steps:
   args: [
     "app", 
     "deploy",
-    "--version"
+    "--version",
     "${_VERSION}"
   ]
   timeout: "1600s"

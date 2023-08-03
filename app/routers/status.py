@@ -1,11 +1,6 @@
 from fastapi import APIRouter
-from ..constants import (
-    VERSION_NAME,
-    PROJECT_NAME,
-    GOOGLE_CLOUD_PROJECT,
-    GAE_VERSION,
-    GAE_MEMORY_MB,
-)
+from ..constants import VERSION_NAME, PROJECT_NAME, GOOGLE_CLOUD_PROJECT
+from ..constants import atlas_username, atlas_password
 
 router = APIRouter()
 
@@ -17,10 +12,20 @@ router = APIRouter()
 async def root():
     return {
         "success": True,
+        "message": "Welcome to Mobile Docs Backend. Go to /docs for documentation",
+    }
+
+
+@router.get(
+    "/status",
+    tags=["General"],
+)
+async def status():
+    return {
+        "success": True,
         "project_name": PROJECT_NAME,
         "version_name": VERSION_NAME,
         "GOOGLE_CLOUD_PROJECT": GOOGLE_CLOUD_PROJECT,
-        "GAE_VERSION": GAE_VERSION,
-        "GAE_MEMORY_MB": GAE_MEMORY_MB,
-        "message": "Welcome to Mobile Docs Backend. Go to /docs for documentation",
+        "atlas_username": atlas_username,
+        "atlas_password": atlas_password,
     }

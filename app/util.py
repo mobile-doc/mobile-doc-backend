@@ -1,6 +1,12 @@
 import pymongo
 import os
+import json
 
+
+# with open("credential.json", "r") as file:
+#     data = json.load(file)
+#     atlas_password = data.get("_ATLAS_PASSWORD")
+#     atlas_username = data.get("_ATLAS_USERNAME")
 
 atlas_password = os.getenv("_ATLAS_PASSWORD")
 atlas_username = os.getenv("_ATLAS_USERNAME")

@@ -1,8 +1,10 @@
 steps:
-# Step 1: Run create_env.py
-# - name: "python"
-#   args: ["create_env.py"]
-- name: "tree"
+# Step 1: Set up environment variables
+- name: "ubuntu"
+  args: ["bash", "./cloud_env.sh"]  
+  env:
+    - "_PROJECT_NAME=${_PROJECT_NAME}"  
+
 # Step 2: Deploy the app using gcloud app deploy
 - name: "gcr.io/cloud-builders/gcloud"
   args: ["app", "deploy"]

@@ -3,7 +3,7 @@ steps:
 - name: "ubuntu"
   args: ["bash", "./cloud_env.sh"]  
   env:
-    - "_PROJECT_NAME=${PROJECT_NAME}"  
+    - "PROJECT_NAME=${_PROJECT_NAME}"  
 
 # Step 2: Deploy the app using gcloud app deploy
 - name: "gcr.io/cloud-builders/gcloud"

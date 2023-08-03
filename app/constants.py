@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 # Load environment variables from .env
 load_dotenv()
 
-PROJECT_NAME = os.getenv("_PROJECT_NAME")
+PROJECT_NAME = os.getenv("PROJECT_NAME")
 VERSION_NAME = os.getenv("_VERSION_NAME")
 
 SHORT_SHA = os.getenv("_SHORT_SHA")

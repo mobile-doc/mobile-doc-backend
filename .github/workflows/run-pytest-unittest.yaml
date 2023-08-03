@@ -33,5 +33,5 @@ jobs:
       run: |
         python -m pytest -s -v 
       env:
-        _ATLAS_USERNAME: user
-        _ATLAS_PASSWORD: 1234
+        _ATLAS_USERNAME: ${_ATLAS_USERNAME}
+        _ATLAS_PASSWORD: ${_ATLAS_PASSWORD}

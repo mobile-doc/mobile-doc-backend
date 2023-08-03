@@ -3,3 +3,5 @@ entrypoint: gunicorn -w 4 -k uvicorn.workers.UvicornWorker app.main:app
 instance_class: F1
 env_variables:
   _ATLAS_USERNAME: ##_ATLAS_USERNAME##
+  _ATLAS_PASSWORD: ##_ATLAS_PASSWORD##
+  _CONFIG_TYPE: ##_CONFIG_TYPE##

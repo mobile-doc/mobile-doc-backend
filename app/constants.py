@@ -12,13 +12,14 @@ VERSION_NAME = "dev" if not VERSION_NAME else VERSION_NAME
 GOOGLE_CLOUD_PROJECT = os.getenv("GOOGLE_CLOUD_PROJECT")
 
 try:
-    with open("credential.json", "r") as file:
+    for root, _, files in os.walk(os.getcwd()):
+        for file in files:
+            if file == "credential.json":
+                credential_file_path = os.path.join(root, file)
+
+    with open(credential_file_path, "r") as file:
         data = json.load(file)
         atlas_password = data.get("_ATLAS_PASSWORD")
         atlas_username = data.get("_ATLAS_USERNAME")
-except:
-    logging.log("Couldn't read from 'credential.json'")
-    for root, _, files in os.walk(os.getcwd()):
-        for file in files:
-            file_path = os.path.join(root, file)
-            print(file_path)
+except Exception as e:
+    logging.error("Couldn't read from 'credential.json': %s", str(e))

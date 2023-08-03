@@ -1,6 +1,5 @@
 from fastapi import APIRouter
 from ..constants import VERSION_NAME, PROJECT_NAME, GOOGLE_CLOUD_PROJECT
-from ..constants import atlas_username, atlas_password
 
 router = APIRouter()
 
@@ -26,6 +25,4 @@ async def status():
         "project_name": PROJECT_NAME,
         "version_name": VERSION_NAME,
         "GOOGLE_CLOUD_PROJECT": GOOGLE_CLOUD_PROJECT,
-        "atlas_username": atlas_username,
-        "atlas_password": atlas_password,
     }

@@ -18,5 +18,3 @@ steps:
 
 timeout: '1600s'
 substitutions:
-  _SHORT_SHA: default
-  _TAG_NAME: default

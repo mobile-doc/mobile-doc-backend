@@ -3,7 +3,7 @@ from fastapi.encoders import jsonable_encoder
 from ..app_models.patient import Patient, PatientInput
 from ..app_models.EHR import TestResult
 import json
-from ..util import get_db, custon_logger
+from ..util import get_db, custon_logger, redis_client
 
 router = APIRouter()
 
@@ -15,8 +15,9 @@ router = APIRouter()
 )
 async def get_patient(patient_id: str):
     custon_logger.info(f"get_patient endpoint called for patient_id='{patient_id}'")
-    db = get_db()
+    redis_client.setex(name="foo", value="bar", time=120)
 
+    db = get_db()
     db_reult = db.patient.find_one({"patient_id": patient_id})
 
     if db_reult == None:

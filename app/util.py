@@ -1,6 +1,10 @@
 import pymongo
 import os
 import logging
+import redis
+from .constants import VERSION_NAME
+
+# database
 
 atlas_password = os.getenv("_ATLAS_PASSWORD")
 atlas_username = os.getenv("_ATLAS_USERNAME")
@@ -14,6 +18,9 @@ def get_db():
     return client.get_database("main_db")
 
 
+# logger
+
+
 class CustomLogger:
     def __init__(self):
         logging.basicConfig(
@@ -23,15 +30,27 @@ class CustomLogger:
 
     def info(self, message):
         self.logger.info(message)
-        print("INFO:\t", message)
+        if VERSION_NAME == "dev":
+            print("INFO:\t", message)
 
     def error(self, message):
         self.logger.error(message)
-        print("ERROR:\t", message)
+        if VERSION_NAME == "dev":
+            print("ERROR:\t", message)
 
     def warning(self, message):
         self.logger.warning(message)
-        print("WARNING:\t", message)
+        if VERSION_NAME == "dev":
+            print("WARNING:\t", message)
 
 
 custon_logger = CustomLogger()
+
+
+# Redis for caching
+
+redis_client = redis.Redis(
+    host="redis-13803.c124.us-central1-1.gce.cloud.redislabs.com",
+    port=13803,
+    password=os.getenv("_REDIS_PASSWORD"),
+)

@@ -147,4 +147,7 @@ cython_debug/
 .vscode
 
 secrets.env
-env_variables.yaml
+
+
+temp.txt
+temp.ipynb

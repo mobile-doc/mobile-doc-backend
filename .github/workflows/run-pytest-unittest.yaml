@@ -35,3 +35,4 @@ jobs:
       env:
         _ATLAS_USERNAME: ${{ secrets._ATLAS_USERNAME }}
         _ATLAS_PASSWORD: ${{ secrets._ATLAS_PASSWORD }}
+        _REDIS_PASSWORD: ${{ secrets._REDIS_PASSWORD }}

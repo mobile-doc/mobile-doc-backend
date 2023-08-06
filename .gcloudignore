@@ -16,3 +16,5 @@ __pycache__/
 /setup.cfg
 
 secrets.env
+temp.txt
+temp.ipynb

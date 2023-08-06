@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException
 from fastapi.encoders import jsonable_encoder
 from ..app_models.patient import Patient, PatientInput
 from ..app_models.EHR import TestResult
+import pickle
 import json
 from ..util import get_db, custon_logger, redis_client
 
@@ -15,28 +16,49 @@ router = APIRouter()
 )
 async def get_patient(patient_id: str):
     custon_logger.info(f"get_patient endpoint called for patient_id='{patient_id}'")
-    redis_client.setex(name="foo", value="bar", time=120)
 
-    db = get_db()
-    db_reult = db.patient.find_one({"patient_id": patient_id})
+    patient_redis_key = "patient_" + patient_id
+    cached_patient = redis_client.get(patient_redis_key)
 
-    if db_reult == None:
-        custon_logger.info(f"Patient id='{patient_id}' not found")
-        raise HTTPException(
-            status_code=404, detail=f"Patient id='{patient_id}' not found"
+    if cached_patient:
+        custon_logger.info(f"Cache Hit! Found cached data for {patient_redis_key=}")
+        patient_details = pickle.loads(cached_patient)
+
+        return {
+            "success": True,
+            "patient": patient_details,
+        }
+
+    else:
+        custon_logger.info(f"Cache Miss! {patient_redis_key=}")
+
+        db = get_db()
+        db_reult = db.patient.find_one({"patient_id": patient_id})
+
+        if db_reult == None:
+            custon_logger.info(f"Patient id='{patient_id}' not found")
+            raise HTTPException(
+                status_code=404, detail=f"Patient id='{patient_id}' not found"
+            )
+
+        try:
+            validated_result = Patient.parse_raw(json.dumps(db_reult, default=str))
+        except:
+            custon_logger.error(
+                f"Validation error while parsing Patient data for patient_id='{patient_id}'"
+            )
+            validated_result = None
+
+        # write back to cache
+        redis_client.setex(
+            name=patient_redis_key,
+            value=pickle.dumps(validated_result),
+            time=120,
         )
-
-    try:
-        validated_result = Patient.parse_raw(json.dumps(db_reult, default=str))
-    except:
-        custon_logger.error(
-            f"Validation error while parsing Patient data for patient_id='{patient_id}'"
-        )
-        validated_result = None
-    return {
-        "success": True,
-        "patient": validated_result,
-    }
+        return {
+            "success": True,
+            "patient": validated_result,
+        }
 
 
 @router.put(

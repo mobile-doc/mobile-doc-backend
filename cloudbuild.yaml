@@ -9,6 +9,10 @@ steps:
   args: 
    - '-c'
    - |
+      echo "_SHORT_SHA: $_SHORT_SHA"
+      echo "_TAG_NAME: $_TAG_NAME"
+      echo "SHORT_SHA: $SHORT_SHA"
+      echo "TAG_NAME: $TAG_NAME"
       sed -i "s/##_ATLAS_USERNAME##/$${ATLAS_USERNAME}/g" app.yaml
       sed -i "s/##_ATLAS_PASSWORD##/$${ATLAS_PASSWORD}/g" app.yaml
       sed -i "s/##_SHORT_SHA##/$${SHORT_SHA}"/g app.yaml

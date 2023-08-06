@@ -4,11 +4,15 @@ steps:
   env:
     - 'ATLAS_USERNAME=${_ATLAS_USERNAME}'
     - 'ATLAS_PASSWORD=${_ATLAS_PASSWORD}'
+    - 'SHORT_SHA=${_SHORT_SHA}'
+    - 'TAG_NAME=${_TAG_NAME}'
   args: 
    - '-c'
    - |
       sed -i "s/##_ATLAS_USERNAME##/$${ATLAS_USERNAME}/g" app.yaml
       sed -i "s/##_ATLAS_PASSWORD##/$${ATLAS_PASSWORD}/g" app.yaml
+      sed -i "s/##_SHORT_SHA##/$${SHORT_SHA}"/g app.yaml
+      sed -i "s/##_TAG_NAME##/$${TAG_NAME}"/g app.yaml
       gcloud config set app/cloud_build_timeout 1600
       gcloud app deploy --version ${_VERSION}
 
@@ -16,3 +20,5 @@ timeout: '1600s'
 substitutions:
   _ATLAS_USERNAME: ${_ATLAS_USERNAME}
   _ATLAS_PASSWORD: ${_ATLAS_PASSWORD}
+  _SHORT_SHA: ${_SHORT_SHA}
+  _TAG_NAME: ${_TAG_NAME}

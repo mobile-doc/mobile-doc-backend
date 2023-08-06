@@ -1,5 +1,11 @@
 from fastapi import APIRouter
-from ..constants import VERSION_NAME, PROJECT_NAME, GOOGLE_CLOUD_PROJECT
+from ..constants import (
+    VERSION_NAME,
+    PROJECT_NAME,
+    GOOGLE_CLOUD_PROJECT,
+    SHORT_SHA,
+    TAG_NAME,
+)
 
 router = APIRouter()
 
@@ -25,4 +31,6 @@ async def status():
         "project_name": PROJECT_NAME,
         "version_name": VERSION_NAME,
         "GOOGLE_CLOUD_PROJECT": GOOGLE_CLOUD_PROJECT,
+        "SHORT_SHA": SHORT_SHA,
+        "TAG_NAME": TAG_NAME,
     }

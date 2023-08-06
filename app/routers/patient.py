@@ -3,7 +3,7 @@ from fastapi.encoders import jsonable_encoder
 from ..app_models.patient import Patient, PatientInput
 from ..app_models.EHR import TestResult
 import json
-from ..util import get_db
+from ..util import get_db, custon_logger
 
 router = APIRouter()
 
@@ -14,13 +14,13 @@ router = APIRouter()
     summary="Returns details of a patient given a valid patient ID",
 )
 async def get_patient(patient_id: str):
-    print(f"get_patient endpoint called for patient_id='{patient_id}'")
+    custon_logger.info(f"get_patient endpoint called for patient_id='{patient_id}'")
     db = get_db()
 
     db_reult = db.patient.find_one({"patient_id": patient_id})
 
     if db_reult == None:
-        print(f"Patient id='{patient_id}' not found")
+        custon_logger.info(f"Patient id='{patient_id}' not found")
         raise HTTPException(
             status_code=404, detail=f"Patient id='{patient_id}' not found"
         )
@@ -28,7 +28,7 @@ async def get_patient(patient_id: str):
     try:
         validated_result = Patient.parse_raw(json.dumps(db_reult, default=str))
     except:
-        print(
+        custon_logger.error(
             f"Validation error while parsing Patient data for patient_id='{patient_id}'"
         )
         validated_result = None
@@ -44,12 +44,12 @@ async def get_patient(patient_id: str):
     summary="Update details of a patient given a valid patient ID",
 )
 async def get_patient(patient_id: str, patient_details: PatientInput):
-    print(f"update_patient endpoint called for patient_id='{patient_id}'")
+    custon_logger.info(f"update_patient endpoint called for patient_id='{patient_id}'")
     db = get_db()
     db_reult = db.patient.find_one({"patient_id": patient_id})
 
     if db_reult == None:
-        print(f"Patient id='{patient_id}' not found")
+        custon_logger.info(f"Patient id='{patient_id}' not found")
         raise HTTPException(
             status_code=404, detail=f"Patient id='{patient_id}' not found"
         )
@@ -72,13 +72,13 @@ async def get_patient(patient_id: str, patient_details: PatientInput):
     summary="Returns the EHR of a patient given a valid patient ID",
 )
 async def get_EHR(patient_id: str):
-    print(f"get_EHR endpoint called for patient_id='{patient_id}'")
+    custon_logger.info(f"get_EHR endpoint called for patient_id='{patient_id}'")
     db = get_db()
 
     db_reult = db.patient.find_one({"patient_id": patient_id})
 
     if db_reult == None:
-        print(f"Patient id='{patient_id}' not found")
+        custon_logger.info(f"Patient id='{patient_id}' not found")
         raise HTTPException(
             status_code=404, detail=f"Patient id='{patient_id}' not found"
         )
@@ -88,7 +88,6 @@ async def get_EHR(patient_id: str):
     db_reult = db.test_result.find({"patient_id": patient_id})
 
     test_results = [TestResult.parse_raw(json.dumps(x, default=str)) for x in db_reult]
-    print(test_results)
 
     return {
         "success": True,

@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 from fastapi.encoders import jsonable_encoder
 
 import json
-from ..util import get_db
+from ..util import get_db, custon_logger
 
 router = APIRouter()
 
@@ -13,7 +13,7 @@ router = APIRouter()
     summary="Returns profile of a doctor for a valid doctor_id",
 )
 async def get_doctor(doctor_id: str):
-    print(f"get_doctor endpoint called for doctor_id={doctor_id}")
+    custon_logger.info(f"get_doctor endpoint called for doctor_id={doctor_id}")
     db = get_db()
 
     db_result = db.doctor.find_one(
@@ -21,7 +21,7 @@ async def get_doctor(doctor_id: str):
     )
 
     if db_result == None:
-        print(f"doctor id='{doctor_id}' not found")
+        custon_logger.info(f"doctor id='{doctor_id}' not found")
         raise HTTPException(
             status_code=404, detail=f"doctor id='{doctor_id}' not found"
         )

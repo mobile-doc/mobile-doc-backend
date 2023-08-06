@@ -3,7 +3,7 @@ from fastapi.encoders import jsonable_encoder
 from ..app_models.EHR import Session, SymptomEntry, Prescription
 import uuid
 import json
-from ..util import get_db
+from ..util import get_db, custon_logger
 
 router = APIRouter()
 
@@ -14,13 +14,13 @@ router = APIRouter()
     summary="Creates a new session between doctor and patient",
 )
 async def create_session(patient_id: str):
-    print(f"create_session endpoint called for patient_id='{patient_id}'")
+    custon_logger.info(f"create_session endpoint called for patient_id='{patient_id}'")
     db = get_db()
 
     db_reult = db.patient.find_one({"patient_id": patient_id})
 
     if db_reult == None:
-        print(f"Patient id='{patient_id}' not found")
+        custon_logger.info(f"Patient id='{patient_id}' not found")
         raise HTTPException(
             status_code=404, detail=f"Patient id='{patient_id}' not found"
         )
@@ -50,13 +50,13 @@ async def create_session(patient_id: str):
     summary="Add a new symptom to existing session",
 )
 async def add_symptoms(session_id: str, symptom_entry: SymptomEntry):
-    print(f"add_symptoms endpoint called for session_id='{session_id}'")
+    custon_logger.info(f"add_symptoms endpoint called for session_id='{session_id}'")
     db = get_db()
 
     db_reult = db.session.find_one({"session_id": session_id})
 
     if db_reult == None:
-        print(f"session id='{session_id}' not found")
+        custon_logger.info(f"session id='{session_id}' not found")
         raise HTTPException(
             status_code=404, detail=f"session id='{session_id}' not found"
         )
@@ -110,13 +110,15 @@ async def add_symptoms(session_id: str, symptom_entry: SymptomEntry):
     summary="Suggests a list of doctors based on provided symptoms",
 )
 async def get_suggested_doctors(session_id: str):
-    print(f"get_suggested_doctors endpoint called for session_id='{session_id}'")
+    custon_logger.info(
+        f"get_suggested_doctors endpoint called for session_id='{session_id}'"
+    )
     db = get_db()
 
     db_reult = db.session.find_one({"session_id": session_id})
 
     if db_reult == None:
-        print(f"session id='{session_id}' not found")
+        custon_logger.info(f"session id='{session_id}' not found")
         raise HTTPException(
             status_code=404, detail=f"session id='{session_id}' not found"
         )
@@ -161,14 +163,16 @@ async def get_suggested_doctors(session_id: str):
     summary="Updates prescription for a session. ",
 )
 async def update_prescription(session_id: str, input_prescription: Prescription):
-    print(f"update_prescription endpoint called for session_id='{session_id}'")
+    custon_logger.info(
+        f"update_prescription endpoint called for session_id='{session_id}'"
+    )
     db = get_db()
     db_reult = db.session.find_one(
         filter={"session_id": session_id}, projection={"session_id": 1}
     )
 
     if db_reult == None:
-        print(f"session id='{session_id}' not found")
+        custon_logger.info(f"session id='{session_id}' not found")
         raise HTTPException(
             status_code=404, detail=f"session id='{session_id}' not found"
         )
@@ -176,8 +180,6 @@ async def update_prescription(session_id: str, input_prescription: Prescription)
     diagonosis = input_prescription.Diagonosis
     advice = input_prescription.advice
     suggested_test_list = input_prescription.suggested_test_list
-
-    # print(suggested_test_list, diagonosis)
 
     db_update = db.session.update_one(
         {"session_id": session_id},

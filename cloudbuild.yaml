@@ -18,7 +18,5 @@ steps:
 
 timeout: '1600s'
 substitutions:
-  _ATLAS_USERNAME: ${_ATLAS_USERNAME}
-  _ATLAS_PASSWORD: ${_ATLAS_PASSWORD}
-  _SHORT_SHA: ${_SHORT_SHA}
-  _TAG_NAME: ${_TAG_NAME}
+  _SHORT_SHA: default
+  _TAG_NAME: default

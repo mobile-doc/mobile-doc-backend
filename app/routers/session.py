@@ -78,17 +78,17 @@ async def add_symptoms(session_id: str, symptom_entry: SymptomEntry):
         each_correlated_symptoms = db.symptoms.find_one(
             filter={"symptom_name": each_added_symptom},
             projection={"correlated_symptoms": 1, "_id": 0},
-        )["correlated_symptoms"]
+        )
+        if each_correlated_symptoms is None:
+            continue
 
         correlated_symptoms_set = correlated_symptoms_set.union(
-            set(each_correlated_symptoms)
+            set(each_correlated_symptoms["correlated_symptoms"])
         )
 
     correlated_symptoms_set = correlated_symptoms_set.difference(
         set(total_symptom_list)
     )
-
-    print(correlated_symptoms_set)
 
     if db_update.modified_count == 1:
         return {
@@ -131,10 +131,13 @@ async def get_suggested_doctors(session_id: str):
         doc_speciality_list = db.symptoms.find_one(
             filter={"symptom_name": symptom_name},
             projection={"_id": 0, "required_doctor_speciality": 1},
-        )["required_doctor_speciality"]
+        )
+
+        if doc_speciality_list is None:
+            continue
 
         required_doctor_specialities = required_doctor_specialities.union(
-            set(doc_speciality_list)
+            set(doc_speciality_list["required_doctor_speciality"])
         )
 
     required_doctor_specialities = list(required_doctor_specialities)

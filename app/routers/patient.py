@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from fastapi.encoders import jsonable_encoder
 from ..app_models.patient import Patient, PatientInput
-from ..app_models.EHR import TestResult
+from ..app_models.EHR import TestResult, Session
 import pickle
 import json
 from ..util import get_db, custon_logger, redis_client
@@ -112,8 +112,13 @@ async def get_EHR(patient_id: str):
 
     test_results = [TestResult.parse_raw(json.dumps(x, default=str)) for x in db_reult]
 
+    db_reult = db.session.find({"patient_id": patient_id})
+
+    patient_sessions = [Session.parse_raw(json.dumps(x, default=str)) for x in db_reult]
+
     return {
         "success": True,
         "patient_details": patient_details,
         "test_results": test_results,
+        "patient_sessions": patient_sessions,
     }

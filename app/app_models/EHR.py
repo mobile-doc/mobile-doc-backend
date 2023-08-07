@@ -33,7 +33,7 @@ class Session(BaseModel):
     start_time: Optional[datetime]
     end_time: Optional[datetime]
     video_call_link: Optional[str]
-    Diagonosis: Optional[str]
+    diagnosis: Optional[str]
     advice: Optional[str]
     symptom_list: Optional[List[SymptomEntry]] = []
     suggested_test_list: Optional[list[str]] = []
@@ -53,7 +53,7 @@ class UpdateSessionTimeInput(BaseModel):
 
 
 class Prescription(BaseModel):
-    Diagonosis: str
+    diagnosis: str
     advice: str
     suggested_test_list: list[str]
     suggested_medicine_list: list[str]
@@ -61,7 +61,7 @@ class Prescription(BaseModel):
     class Config:
         schema_extra = {
             "example": {
-                "Diagonosis": "Seasonal Viral Fever",
+                "diagnosis": "Seasonal Viral Fever",
                 "advice": "Take rest for 2 days.",
                 "suggested_test_list": ["CBC test", "Chest X-ray"],
                 "suggested_medicine_list": ["Napa", "Seclo"],

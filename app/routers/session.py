@@ -198,6 +198,63 @@ async def update_prescription(
             "message": f"Session time was updated for session_id='{session_id}'",
             "input_updated_time": input_updated_time,
         }
+    else:
+        return {
+            "success": False,
+            "message": f"No Change was made for session_id='{session_id}'",
+        }
+
+
+@router.post(
+    "/session/update_session_doctor/{session_id}",
+    tags=["Session-Patient"],
+    summary="Updates doctor_id for a session. ",
+)
+async def update_prescription(session_id: str, input_doctor_id: str):
+    custon_logger.info(
+        f"update_session_doctor endpoint called for session_id='{session_id}'"
+    )
+    db = get_db()
+    db_reult = db.session.find_one(
+        filter={"session_id": session_id}, projection={"session_id": 1}
+    )
+
+    if db_reult == None:
+        custon_logger.info(f"session id='{session_id}' not found")
+        raise HTTPException(
+            status_code=404, detail=f"session id='{session_id}' not found"
+        )
+
+    db_result = db.doctor.find_one(
+        filter={"doctor_id": input_doctor_id}, projection={"doctor_id": 1}
+    )
+
+    if db_reult == None:
+        custon_logger.info(f"doctor_id id='{input_doctor_id}' not found")
+        raise HTTPException(
+            status_code=404, detail=f"doctor_id id='{input_doctor_id}' not found"
+        )
+
+    db_update = db.session.update_one(
+        {"session_id": session_id},
+        {
+            "$set": {
+                "doctor_id": input_doctor_id,
+            }
+        },
+    )
+
+    if db_update.modified_count == 1:
+        return {
+            "success": True,
+            "message": f"Session doctor was updated for session_id='{session_id}'",
+            "input_doctor_id": input_doctor_id,
+        }
+    else:
+        return {
+            "success": False,
+            "message": f"No Change was made for session_id='{session_id}'",
+        }
 
 
 @router.put(
@@ -220,7 +277,7 @@ async def update_prescription(session_id: str, input_prescription: Prescription)
             status_code=404, detail=f"session id='{session_id}' not found"
         )
 
-    diagonosis = input_prescription.Diagonosis
+    diagnosis = input_prescription.diagnosis
     advice = input_prescription.advice
     suggested_test_list = input_prescription.suggested_test_list
 
@@ -228,7 +285,7 @@ async def update_prescription(session_id: str, input_prescription: Prescription)
         {"session_id": session_id},
         {
             "$set": {
-                "diagonosis": diagonosis,
+                "diagnosis": diagnosis,
                 "advice": advice,
                 "suggested_test_list": suggested_test_list,
             }

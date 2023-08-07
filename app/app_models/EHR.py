@@ -39,6 +39,19 @@ class Session(BaseModel):
     suggested_test_list: Optional[list[str]] = []
 
 
+class UpdateSessionTimeInput(BaseModel):
+    start_time: datetime
+    end_time: datetime
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "start_time": "2023-08-07 09:00",
+                "end_time": "2023-08-07 10:30",
+            }
+        }
+
+
 class Prescription(BaseModel):
     Diagonosis: str
     advice: str

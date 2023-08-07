@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from fastapi.encoders import jsonable_encoder
-from ..app_models.EHR import Session, SymptomEntry, Prescription
+from ..app_models.EHR import Session, SymptomEntry, Prescription, UpdateSessionTimeInput
 import uuid
 import json
 from ..util import get_db, custon_logger
@@ -155,6 +155,49 @@ async def get_suggested_doctors(session_id: str):
         "required_doctor_specialities": required_doctor_specialities,
         "suggested_doctors": suggested_doctors,
     }
+
+
+@router.post(
+    "/session/update_session_time/{session_id}",
+    tags=["Session-Patient"],
+    summary="Updates start_time and end_time for a session. ",
+)
+async def update_prescription(
+    session_id: str, input_updated_time: UpdateSessionTimeInput
+):
+    custon_logger.info(
+        f"update_session_time endpoint called for session_id='{session_id}'"
+    )
+    db = get_db()
+    db_reult = db.session.find_one(
+        filter={"session_id": session_id}, projection={"session_id": 1}
+    )
+
+    if db_reult == None:
+        custon_logger.info(f"session id='{session_id}' not found")
+        raise HTTPException(
+            status_code=404, detail=f"session id='{session_id}' not found"
+        )
+
+    start_time = input_updated_time.start_time
+    end_time = input_updated_time.end_time
+
+    db_update = db.session.update_one(
+        {"session_id": session_id},
+        {
+            "$set": {
+                "start_time": start_time,
+                "end_time": end_time,
+            }
+        },
+    )
+
+    if db_update.modified_count == 1:
+        return {
+            "success": True,
+            "message": f"Session time was updated for session_id='{session_id}'",
+            "input_updated_time": input_updated_time,
+        }
 
 
 @router.put(

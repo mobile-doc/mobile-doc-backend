@@ -284,6 +284,48 @@ async def update_session_doctor(session_id: str, input_doctor_id: str):
         }
 
 
+@router.post(
+    "/session/update_video_call_link/{session_id}",
+    tags=["Session-Patient"],
+    summary="Updates video_call_link for a session. ",
+)
+async def update_video_call_link(session_id: str, input_video_call_link: str):
+    custon_logger.info(
+        f"update_video_call_link endpoint called for session_id='{session_id}'"
+    )
+    db = get_db()
+    db_reult = db.session.find_one(
+        filter={"session_id": session_id}, projection={"session_id": 1}
+    )
+
+    if db_reult == None:
+        custon_logger.info(f"session id='{session_id}' not found")
+        raise HTTPException(
+            status_code=404, detail=f"session id='{session_id}' not found"
+        )
+
+    db_update = db.session.update_one(
+        {"session_id": session_id},
+        {
+            "$set": {
+                "video_call_link": input_video_call_link,
+            }
+        },
+    )
+
+    if db_update.modified_count == 1:
+        return {
+            "success": True,
+            "message": f"Session doctor was updated for session_id='{session_id}'",
+            "video_call_link": input_video_call_link,
+        }
+    else:
+        return {
+            "success": False,
+            "message": f"No Change was made for session_id='{session_id}'",
+        }
+
+
 @router.put(
     "/session/update_prescription/{session_id}",
     tags=["Session-Doctor"],

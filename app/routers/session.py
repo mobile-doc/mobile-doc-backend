@@ -44,6 +44,33 @@ async def create_session(patient_id: str):
         }
 
 
+@router.get(
+    "/session/{session_id}",
+    tags=["Session-Patient"],
+    summary="Get all the details of a session. ",
+)
+async def get_session(session_id: str):
+    custon_logger.info(f"get_session endpoint called for session_id='{session_id}'")
+    db = get_db()
+    db_reult = db.session.find_one(
+        filter={"session_id": session_id}, projection={"_id": 0}
+    )
+
+    if db_reult == None:
+        custon_logger.info(f"session id='{session_id}' not found")
+        raise HTTPException(
+            status_code=404, detail=f"session id='{session_id}' not found"
+        )
+
+    validated_session = Session.parse_obj(db_reult)
+
+    return {
+        "success": True,
+        "message": f"providing session details for session_id='{session_id}'",
+        "session": validated_session,
+    }
+
+
 @router.post(
     "/session/symptoms/{session_id}",
     tags=["Session-Patient"],
@@ -162,7 +189,7 @@ async def get_suggested_doctors(session_id: str):
     tags=["Session-Patient"],
     summary="Updates start_time and end_time for a session. ",
 )
-async def update_prescription(
+async def update_session_time(
     session_id: str, input_updated_time: UpdateSessionTimeInput
 ):
     custon_logger.info(
@@ -210,7 +237,7 @@ async def update_prescription(
     tags=["Session-Patient"],
     summary="Updates doctor_id for a session. ",
 )
-async def update_prescription(session_id: str, input_doctor_id: str):
+async def update_session_doctor(session_id: str, input_doctor_id: str):
     custon_logger.info(
         f"update_session_doctor endpoint called for session_id='{session_id}'"
     )

@@ -19,15 +19,6 @@ sample_prescription = [
         "advice": ["Avoid known allergens", "Keep the affected area clean"],
     },
     {
-        "age": 22,
-        "gender": "F",
-        "symptoms": ["Rash", "Itching", "Redness"],
-        "diagnosis": "Allergic reaction",
-        "suggested_tests": ["Allergy skin tests"],
-        "suggested_medicine": ["Antihistamines", "Topical corticosteroids"],
-        "advice": ["Avoid known allergens", "Keep the affected area clean"],
-    },
-    {
         "age": 38,
         "gender": "M",
         "symptoms": ["Severe headache", "Nausea", "Blurred vision"],
@@ -37,7 +28,7 @@ sample_prescription = [
         "advice": ["Find and avoid triggers", "Rest in a dark and quiet room"],
     },
     {
-        "age": 30,
+        "age": 23,
         "gender": "O",
         "symptoms": ["Chest pain", "Shortness of breath", "Irregular heartbeat"],
         "diagnosis": "Arrhythmia",
@@ -61,7 +52,7 @@ publisher = pubsub_v1.PublisherClient()
 topic_path = "projects/mobile-doc-backend/topics/pub_sub_bq_prescription"
 
 # Data must be a bytestring
-data = json.dumps(sample_prescription[1]).encode("utf-8")
+data = json.dumps(sample_prescription[3]).encode("utf-8")
 
 # Publish the message
 future = publisher.publish(topic_path, data)

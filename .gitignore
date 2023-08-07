@@ -147,6 +147,7 @@ cython_debug/
 .vscode
 
 secrets.env
+mobile-doc-backend-analytics-sa.json
 
 
 temp.txt

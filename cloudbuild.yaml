@@ -4,6 +4,7 @@ steps:
   env:
     - 'ATLAS_USERNAME=${_ATLAS_USERNAME}'
     - 'ATLAS_PASSWORD=${_ATLAS_PASSWORD}'
+    - 'REDIS_PASSWORD=${_REDIS_PASSWORD}'
     - 'SHORT_SHA=${SHORT_SHA}'
     - 'TAG_NAME=${TAG_NAME}'
   args: 
@@ -13,6 +14,7 @@ steps:
       echo "TAG_NAME: $TAG_NAME"
       sed -i "s/##_ATLAS_USERNAME##/$${ATLAS_USERNAME}/g" app.yaml
       sed -i "s/##_ATLAS_PASSWORD##/$${ATLAS_PASSWORD}/g" app.yaml
+      sed -i "s/##_REDIS_PASSWORD##/$${REDIS_PASSWORD}/g" app.yaml
       sed -i "s/##_SHORT_SHA##/$${SHORT_SHA}"/g app.yaml
       sed -i "s/##_TAG_NAME##/$${TAG_NAME}"/g app.yaml
       gcloud config set app/cloud_build_timeout 1600

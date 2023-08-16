@@ -49,8 +49,19 @@ custon_logger = CustomLogger()
 
 # Redis for caching
 
-redis_client = redis.Redis(
-    host="redis-13803.c124.us-central1-1.gce.cloud.redislabs.com",
-    port=13803,
-    password=os.getenv("_REDIS_PASSWORD"),
-)
+
+def get_redis_client():
+    custon_logger.info("Instantiating Redis Client")
+    try:
+        redis_client = redis.Redis(
+            host="redis-13803.c124.us-central1-1.gce.cloud.redislabs.com",
+            port=13803,
+            password=os.getenv("_REDIS_PASSWORD"),
+        )
+        return redis_client
+    except Exception as e:
+        custon_logger.error(f"Error with Redis Client: {e}")
+        return None
+
+
+redis_client = get_redis_client()

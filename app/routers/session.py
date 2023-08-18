@@ -3,7 +3,7 @@ from fastapi.encoders import jsonable_encoder
 from ..app_models.EHR import Session, SymptomEntry, Prescription, UpdateSessionTimeInput
 import uuid
 import json
-from ..util import get_db, custon_logger
+from ..util import get_db, custom_logger
 
 router = APIRouter()
 
@@ -14,13 +14,13 @@ router = APIRouter()
     summary="Creates a new session between doctor and patient",
 )
 async def create_session(patient_id: str):
-    custon_logger.info(f"create_session endpoint called for patient_id='{patient_id}'")
+    custom_logger.info(f"create_session endpoint called for patient_id='{patient_id}'")
     db = get_db()
 
     db_reult = db.patient.find_one({"patient_id": patient_id})
 
     if db_reult == None:
-        custon_logger.info(f"Patient id='{patient_id}' not found")
+        custom_logger.info(f"Patient id='{patient_id}' not found")
         raise HTTPException(
             status_code=404, detail=f"Patient id='{patient_id}' not found"
         )
@@ -50,14 +50,14 @@ async def create_session(patient_id: str):
     summary="Get all the details of a session. ",
 )
 async def get_session(session_id: str):
-    custon_logger.info(f"get_session endpoint called for session_id='{session_id}'")
+    custom_logger.info(f"get_session endpoint called for session_id='{session_id}'")
     db = get_db()
     db_reult = db.session.find_one(
         filter={"session_id": session_id}, projection={"_id": 0}
     )
 
     if db_reult == None:
-        custon_logger.info(f"session id='{session_id}' not found")
+        custom_logger.info(f"session id='{session_id}' not found")
         raise HTTPException(
             status_code=404, detail=f"session id='{session_id}' not found"
         )
@@ -77,13 +77,13 @@ async def get_session(session_id: str):
     summary="Add a new symptom to existing session",
 )
 async def add_symptoms(session_id: str, symptom_entry: SymptomEntry):
-    custon_logger.info(f"add_symptoms endpoint called for session_id='{session_id}'")
+    custom_logger.info(f"add_symptoms endpoint called for session_id='{session_id}'")
     db = get_db()
 
     db_reult = db.session.find_one({"session_id": session_id})
 
     if db_reult == None:
-        custon_logger.info(f"session id='{session_id}' not found")
+        custom_logger.info(f"session id='{session_id}' not found")
         raise HTTPException(
             status_code=404, detail=f"session id='{session_id}' not found"
         )
@@ -137,7 +137,7 @@ async def add_symptoms(session_id: str, symptom_entry: SymptomEntry):
     summary="Suggests a list of doctors based on provided symptoms",
 )
 async def get_suggested_doctors(session_id: str):
-    custon_logger.info(
+    custom_logger.info(
         f"get_suggested_doctors endpoint called for session_id='{session_id}'"
     )
     db = get_db()
@@ -145,7 +145,7 @@ async def get_suggested_doctors(session_id: str):
     db_reult = db.session.find_one({"session_id": session_id})
 
     if db_reult == None:
-        custon_logger.info(f"session id='{session_id}' not found")
+        custom_logger.info(f"session id='{session_id}' not found")
         raise HTTPException(
             status_code=404, detail=f"session id='{session_id}' not found"
         )
@@ -192,7 +192,7 @@ async def get_suggested_doctors(session_id: str):
 async def update_session_time(
     session_id: str, input_updated_time: UpdateSessionTimeInput
 ):
-    custon_logger.info(
+    custom_logger.info(
         f"update_session_time endpoint called for session_id='{session_id}'"
     )
     db = get_db()
@@ -201,7 +201,7 @@ async def update_session_time(
     )
 
     if db_reult == None:
-        custon_logger.info(f"session id='{session_id}' not found")
+        custom_logger.info(f"session id='{session_id}' not found")
         raise HTTPException(
             status_code=404, detail=f"session id='{session_id}' not found"
         )
@@ -238,7 +238,7 @@ async def update_session_time(
     summary="Updates doctor_id for a session. ",
 )
 async def update_session_doctor(session_id: str, input_doctor_id: str):
-    custon_logger.info(
+    custom_logger.info(
         f"update_session_doctor endpoint called for session_id='{session_id}'"
     )
     db = get_db()
@@ -247,7 +247,7 @@ async def update_session_doctor(session_id: str, input_doctor_id: str):
     )
 
     if db_reult == None:
-        custon_logger.info(f"session id='{session_id}' not found")
+        custom_logger.info(f"session id='{session_id}' not found")
         raise HTTPException(
             status_code=404, detail=f"session id='{session_id}' not found"
         )
@@ -257,7 +257,7 @@ async def update_session_doctor(session_id: str, input_doctor_id: str):
     )
 
     if db_reult == None:
-        custon_logger.info(f"doctor_id id='{input_doctor_id}' not found")
+        custom_logger.info(f"doctor_id id='{input_doctor_id}' not found")
         raise HTTPException(
             status_code=404, detail=f"doctor_id id='{input_doctor_id}' not found"
         )
@@ -290,7 +290,7 @@ async def update_session_doctor(session_id: str, input_doctor_id: str):
     summary="Updates video_call_link for a session. ",
 )
 async def update_video_call_link(session_id: str, input_video_call_link: str):
-    custon_logger.info(
+    custom_logger.info(
         f"update_video_call_link endpoint called for session_id='{session_id}'"
     )
     db = get_db()
@@ -299,7 +299,7 @@ async def update_video_call_link(session_id: str, input_video_call_link: str):
     )
 
     if db_reult == None:
-        custon_logger.info(f"session id='{session_id}' not found")
+        custom_logger.info(f"session id='{session_id}' not found")
         raise HTTPException(
             status_code=404, detail=f"session id='{session_id}' not found"
         )
@@ -332,7 +332,7 @@ async def update_video_call_link(session_id: str, input_video_call_link: str):
     summary="Updates prescription for a session. ",
 )
 async def update_prescription(session_id: str, input_prescription: Prescription):
-    custon_logger.info(
+    custom_logger.info(
         f"update_prescription endpoint called for session_id='{session_id}'"
     )
     db = get_db()
@@ -341,7 +341,7 @@ async def update_prescription(session_id: str, input_prescription: Prescription)
     )
 
     if db_reult == None:
-        custon_logger.info(f"session id='{session_id}' not found")
+        custom_logger.info(f"session id='{session_id}' not found")
         raise HTTPException(
             status_code=404, detail=f"session id='{session_id}' not found"
         )

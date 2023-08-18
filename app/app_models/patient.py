@@ -103,6 +103,19 @@ class UpdatePatientInput(BaseModel):
         }
 
 
+class PatientOutput(BaseModel):
+    patient_id: str
+    name: str
+    identification_no: str
+    date_of_brth: date
+    address: str
+    phone_no: str
+    email: str
+    profession: str
+    general_information: GeneralInformation
+    physical_attributes: Optional[list[PhysicalAttribute]]
+
+
 class PatientLoginInput(BaseModel):
     patient_id: str
     password: str

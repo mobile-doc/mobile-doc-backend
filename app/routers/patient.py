@@ -1,19 +1,13 @@
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.encoders import jsonable_encoder
 from fastapi.security import OAuth2PasswordRequestForm
-from ..app_models.patient import Patient, UpdatePatientInput
+from ..app_models.patient import Patient, UpdatePatientInput, PatientLoginInput
 from ..app_models.EHR import TestResult, Session
 import pickle
 import json
-from ..util import (
-    get_db,
-    custon_logger,
-    redis_client,
-    get_hashed_password,
-    verify_password,
-    create_access_token,
-    create_refresh_token,
-)
+from ..util import get_db, custon_logger, redis_client, AuthHandler
+
+auth_handler = AuthHandler()
 
 router = APIRouter()
 
@@ -32,7 +26,9 @@ async def create_patient(patient_details: Patient):
     if db_reult:
         return {"success": False, "message": "patient_id exists. Try another one"}
     else:
-        patient_details.password = get_hashed_password(patient_details.password)
+        patient_details.password = auth_handler.get_password_hash(
+            patient_details.password
+        )
 
         insert_result = db.patient.insert_one(jsonable_encoder(patient_details))
 
@@ -55,9 +51,9 @@ async def create_patient(patient_details: Patient):
     tags=["Patient"],
     summary="Create access and refresh tokens for user",
 )
-async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+async def login(patient_login_input: PatientLoginInput):
     db = get_db()
-    db_reult = db.patient.find_one({"patient_id": form_data.username})
+    db_reult = db.patient.find_one({"patient_id": patient_login_input.patient_id})
 
     if db_reult is None:
         raise HTTPException(
@@ -66,16 +62,22 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
         )
 
     hashed_pass = db_reult["password"]
-    if not verify_password(form_data.password, hashed_pass):
+    if not auth_handler.verify_password(patient_login_input.password, hashed_pass):
         raise HTTPException(
             status_code=400,
             detail="Incorrect email or password",
         )
+    token = auth_handler.encode_token(patient_login_input.patient_id)
+    return {"token": token}
 
-    return {
-        "access_token": create_access_token(db_reult["patient_id"]),
-        "refresh_token": create_refresh_token(db_reult["patient_id"]),
-    }
+
+@router.get(
+    "/patient/protected",
+    tags=["Patient"],
+    summary="Check for protected endpoint",
+)
+async def protected_endpoint(patiend_id=Depends(auth_handler.auth_wrapper)):
+    return {"patient_id": patiend_id}
 
 
 @router.get(

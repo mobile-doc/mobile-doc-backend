@@ -2,10 +2,6 @@ import pymongo
 import os
 import logging
 import redis
-from datetime import datetime, timedelta
-from typing import Union, Any
-from jose import jwt
-from passlib.context import CryptContext
 from .constants import VERSION_NAME
 
 # database
@@ -72,44 +68,40 @@ redis_client = get_redis_client()
 
 
 # authentication
-ACCESS_TOKEN_EXPIRE_MINUTES = 30  # 30 minutes
-REFRESH_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 days
-ALGORITHM = "HS256"
-JWT_SECRET_KEY = "temp_secret_key"
-JWT_REFRESH_SECRET_KEY = "temp_secret_key"
-
-password_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+import jwt
+from fastapi import HTTPException, Security
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from passlib.context import CryptContext
+from datetime import datetime, timedelta
 
 
-def get_hashed_password(password: str) -> str:
-    return password_context.hash(password)
+class AuthHandler:
+    security = HTTPBearer()
+    pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+    secret = "SECRET"
 
+    def get_password_hash(self, password):
+        return self.pwd_context.hash(password)
 
-def verify_password(password: str, hashed_pass: str) -> bool:
-    return password_context.verify(password, hashed_pass)
+    def verify_password(self, plain_password, hashed_password):
+        return self.pwd_context.verify(plain_password, hashed_password)
 
+    def encode_token(self, user_id):
+        payload = {
+            "exp": datetime.utcnow() + timedelta(days=0, minutes=5),
+            "iat": datetime.utcnow(),
+            "sub": user_id,
+        }
+        return jwt.encode(payload, self.secret, algorithm="HS256")
 
-def create_access_token(subject: Union[str, Any], expires_delta: int = None) -> str:
-    if expires_delta is not None:
-        expires_delta = datetime.utcnow() + expires_delta
-    else:
-        expires_delta = datetime.utcnow() + timedelta(
-            minutes=ACCESS_TOKEN_EXPIRE_MINUTES
-        )
+    def decode_token(self, token):
+        try:
+            payload = jwt.decode(token, self.secret, algorithms=["HS256"])
+            return payload["sub"]
+        except jwt.ExpiredSignatureError:
+            raise HTTPException(status_code=401, detail="Signature has expired")
+        except jwt.InvalidTokenError as e:
+            raise HTTPException(status_code=401, detail="Invalid token")
 
-    to_encode = {"exp": expires_delta, "sub": str(subject)}
-    encoded_jwt = jwt.encode(to_encode, JWT_SECRET_KEY, ALGORITHM)
-    return encoded_jwt
-
-
-def create_refresh_token(subject: Union[str, Any], expires_delta: int = None) -> str:
-    if expires_delta is not None:
-        expires_delta = datetime.utcnow() + expires_delta
-    else:
-        expires_delta = datetime.utcnow() + timedelta(
-            minutes=REFRESH_TOKEN_EXPIRE_MINUTES
-        )
-
-    to_encode = {"exp": expires_delta, "sub": str(subject)}
-    encoded_jwt = jwt.encode(to_encode, JWT_REFRESH_SECRET_KEY, ALGORITHM)
-    return encoded_jwt
+    def auth_wrapper(self, auth: HTTPAuthorizationCredentials = Security(security)):
+        return self.decode_token(auth.credentials)

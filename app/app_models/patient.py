@@ -101,3 +101,8 @@ class UpdatePatientInput(BaseModel):
                 ],
             }
         }
+
+
+class PatientLoginInput(BaseModel):
+    patient_id: str
+    password: str

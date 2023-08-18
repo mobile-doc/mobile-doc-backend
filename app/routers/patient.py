@@ -1,10 +1,19 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from fastapi.encoders import jsonable_encoder
+from fastapi.security import OAuth2PasswordRequestForm
 from ..app_models.patient import Patient, UpdatePatientInput
 from ..app_models.EHR import TestResult, Session
 import pickle
 import json
-from ..util import get_db, custon_logger, redis_client, get_hashed_password
+from ..util import (
+    get_db,
+    custon_logger,
+    redis_client,
+    get_hashed_password,
+    verify_password,
+    create_access_token,
+    create_refresh_token,
+)
 
 router = APIRouter()
 
@@ -39,6 +48,34 @@ async def create_patient(patient_details: Patient):
                 "success": False,
                 "message": "patient could not be inserted. potential db issue",
             }
+
+
+@router.post(
+    "/patient/login",
+    tags=["Patient"],
+    summary="Create access and refresh tokens for user",
+)
+async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    db = get_db()
+    db_reult = db.patient.find_one({"patient_id": form_data.username})
+
+    if db_reult is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Incorrect email or password",
+        )
+
+    hashed_pass = db_reult["password"]
+    if not verify_password(form_data.password, hashed_pass):
+        raise HTTPException(
+            status_code=400,
+            detail="Incorrect email or password",
+        )
+
+    return {
+        "access_token": create_access_token(db_reult["patient_id"]),
+        "refresh_token": create_refresh_token(db_reult["patient_id"]),
+    }
 
 
 @router.get(

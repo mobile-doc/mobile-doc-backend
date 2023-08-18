@@ -39,6 +39,7 @@ class PhysicalAttribute(BaseModel):
 
 class Patient(BaseModel):
     patient_id: str
+    password: str
     name: str
     identification_no: str
     date_of_brth: date
@@ -53,6 +54,7 @@ class Patient(BaseModel):
         schema_extra = {
             "example": {
                 "patient_id": "1234",
+                "password": "1234",
                 "name": "Dhrubo Kamal",
                 "identification_no": "5678",
                 "date_of_brth": "1980-01-01",
@@ -70,7 +72,7 @@ class Patient(BaseModel):
         }
 
 
-class PatientInput(BaseModel):
+class UpdatePatientInput(BaseModel):
     name: str
     identification_no: str
     date_of_brth: date

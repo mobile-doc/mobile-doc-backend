@@ -30,3 +30,6 @@ uvloop==0.17.0
 watchfiles==0.18.1
 websockets==10.4
 redis==4.5.4
+python-jose==3.3.0
+passlib==1.7.4
+python-multipart==0.0.5

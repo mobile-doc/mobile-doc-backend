@@ -1,12 +1,44 @@
 from fastapi import APIRouter, HTTPException
 from fastapi.encoders import jsonable_encoder
-from ..app_models.patient import Patient, PatientInput
+from ..app_models.patient import Patient, UpdatePatientInput
 from ..app_models.EHR import TestResult, Session
 import pickle
 import json
-from ..util import get_db, custon_logger, redis_client
+from ..util import get_db, custon_logger, redis_client, get_hashed_password
 
 router = APIRouter()
+
+
+@router.post(
+    "/patient/new",
+    tags=["Patient"],
+    summary="Creates a new patient",
+)
+async def create_patient(patient_details: Patient):
+    custon_logger.info(f"create_patient endpoint called")
+    # checking if patient_id already exists.
+    db = get_db()
+    db_reult = db.patient.find_one({"patient_id": patient_details.patient_id})
+
+    if db_reult:
+        return {"success": False, "message": "patient_id exists. Try another one"}
+    else:
+        patient_details.password = get_hashed_password(patient_details.password)
+
+        insert_result = db.patient.insert_one(jsonable_encoder(patient_details))
+
+        if insert_result:
+            return {
+                "success": True,
+                "insert_id": str(insert_result.inserted_id),
+                "inserted_patient": patient_details,
+                "message": "patient was inserted successfully",
+            }
+        else:
+            return {
+                "success": False,
+                "message": "patient could not be inserted. potential db issue",
+            }
 
 
 @router.get(
@@ -66,7 +98,7 @@ async def get_patient(patient_id: str):
     tags=["Patient"],
     summary="Update details of a patient given a valid patient ID",
 )
-async def get_patient(patient_id: str, patient_details: PatientInput):
+async def get_patient(patient_id: str, patient_details: UpdatePatientInput):
     custon_logger.info(f"update_patient endpoint called for patient_id='{patient_id}'")
     db = get_db()
     db_reult = db.patient.find_one({"patient_id": patient_id})

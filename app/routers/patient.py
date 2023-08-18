@@ -1,6 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.encoders import jsonable_encoder
-from fastapi.security import OAuth2PasswordRequestForm
 from ..app_models.patient import Patient, UpdatePatientInput, PatientLoginInput
 from ..app_models.EHR import TestResult, Session
 import pickle
@@ -72,20 +71,11 @@ async def login(patient_login_input: PatientLoginInput):
 
 
 @router.get(
-    "/patient/protected",
+    "/patient/details",
     tags=["Patient"],
-    summary="Check for protected endpoint",
+    summary="Returns details of a patient given authentication",
 )
-async def protected_endpoint(patiend_id=Depends(auth_handler.auth_wrapper)):
-    return {"patient_id": patiend_id}
-
-
-@router.get(
-    "/patient/{patient_id}",
-    tags=["Patient"],
-    summary="Returns details of a patient given a valid patient ID",
-)
-async def get_patient(patient_id: str):
+async def get_patient(patient_id: str = Depends(auth_handler.auth_wrapper)):
     custon_logger.info(f"get_patient endpoint called for patient_id='{patient_id}'")
 
     patient_redis_key = "patient_" + patient_id

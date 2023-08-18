@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 from fastapi.encoders import jsonable_encoder
 from ..app_models.EHR import Medicine
 import json
-from ..util import get_db, custon_logger
+from ..util import get_db, custom_logger
 
 router = APIRouter()
 
@@ -13,7 +13,7 @@ router = APIRouter()
     summary="Returns a list of prescribable medicine",
 )
 async def get_medicines():
-    custon_logger.info(f"get_medicines endpoint called")
+    custom_logger.info(f"get_medicines endpoint called")
     db = get_db()
 
     db_result = db.medicine.find(filter={}, projection={"_id": False})

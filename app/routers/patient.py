@@ -1,27 +1,97 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from fastapi.encoders import jsonable_encoder
-from ..app_models.patient import Patient, PatientInput
+from ..app_models.patient import (
+    Patient,
+    UpdatePatientInput,
+    PatientLoginInput,
+    PatientOutput,
+)
 from ..app_models.EHR import TestResult, Session
 import pickle
 import json
-from ..util import get_db, custon_logger, redis_client
+from ..util import get_db, custom_logger, redis_client, AuthHandler
+
+auth_handler = AuthHandler()
 
 router = APIRouter()
+
+
+@router.post(
+    "/patient/new",
+    tags=["Patient"],
+    summary="Creates a new patient",
+)
+async def create_patient(patient_details: Patient):
+    custom_logger.info(f"create_patient endpoint called")
+    # checking if patient_id already exists.
+    db = get_db()
+    db_reult = db.patient.find_one({"patient_id": patient_details.patient_id})
+
+    if db_reult:
+        return {"success": False, "message": "patient_id exists. Try another one"}
+    else:
+        patient_details.password = auth_handler.get_password_hash(
+            patient_details.password
+        )
+
+        insert_result = db.patient.insert_one(jsonable_encoder(patient_details))
+
+        if insert_result:
+            return {
+                "success": True,
+                "insert_id": str(insert_result.inserted_id),
+                "inserted_patient": patient_details,
+                "message": "patient was inserted successfully",
+            }
+        else:
+            return {
+                "success": False,
+                "message": "patient could not be inserted. potential db issue",
+            }
+
+
+@router.post(
+    "/patient/login",
+    tags=["Patient"],
+    summary="Create access and refresh tokens for user",
+)
+async def login(patient_login_input: PatientLoginInput):
+    db = get_db()
+    db_reult = db.patient.find_one({"patient_id": patient_login_input.patient_id})
+
+    if db_reult is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Incorrect email or password",
+        )
+
+    hashed_pass = db_reult["password"]
+    if not auth_handler.verify_password(patient_login_input.password, hashed_pass):
+        raise HTTPException(
+            status_code=400,
+            detail="Incorrect email or password",
+        )
+    token = auth_handler.encode_token(patient_login_input.patient_id)
+    return {"token": token}
 
 
 @router.get(
     "/patient/{patient_id}",
     tags=["Patient"],
-    summary="Returns details of a patient given a valid patient ID",
+    summary="Returns details of a patient given authentication",
 )
-async def get_patient(patient_id: str):
-    custon_logger.info(f"get_patient endpoint called for patient_id='{patient_id}'")
+async def get_patient(patient_id: str, auth_id=Depends(auth_handler.auth_wrapper)):
+    custom_logger.info(f"get_patient endpoint called for patient_id='{patient_id}'")
+
+    if patient_id != auth_id:
+        custom_logger.error(f"{auth_id} is tring to perform action of {patient_id}")
+        raise HTTPException(status_code=403, detail="Unauthorized action")
 
     patient_redis_key = "patient_" + patient_id
     cached_patient = redis_client.get(patient_redis_key)
 
     if cached_patient:
-        custon_logger.info(f"Cache Hit! Found cached data for {patient_redis_key=}")
+        custom_logger.info(f"Cache Hit! Found cached data for {patient_redis_key=}")
         patient_details = pickle.loads(cached_patient)
 
         return {
@@ -30,21 +100,23 @@ async def get_patient(patient_id: str):
         }
 
     else:
-        custon_logger.info(f"Cache Miss! {patient_redis_key=}")
+        custom_logger.info(f"Cache Miss! {patient_redis_key=}")
 
         db = get_db()
         db_reult = db.patient.find_one({"patient_id": patient_id})
 
         if db_reult == None:
-            custon_logger.info(f"Patient id='{patient_id}' not found")
+            custom_logger.info(f"Patient id='{patient_id}' not found")
             raise HTTPException(
                 status_code=404, detail=f"Patient id='{patient_id}' not found"
             )
 
         try:
-            validated_result = Patient.parse_raw(json.dumps(db_reult, default=str))
+            validated_result = PatientOutput.parse_raw(
+                json.dumps(db_reult, default=str)
+            )
         except:
-            custon_logger.error(
+            custom_logger.error(
                 f"Validation error while parsing Patient data for patient_id='{patient_id}'"
             )
             validated_result = None
@@ -64,24 +136,24 @@ async def get_patient(patient_id: str):
 @router.put(
     "/patient/{patient_id}",
     tags=["Patient"],
-    summary="Update details of a patient given a valid patient ID",
+    summary="Update details of a patient given authenticated",
 )
-async def get_patient(patient_id: str, patient_details: PatientInput):
-    custon_logger.info(f"update_patient endpoint called for patient_id='{patient_id}'")
+async def update_patient(
+    patient_details: UpdatePatientInput,
+    patient_id: str,
+    auth_id: str = Depends(auth_handler.auth_wrapper),
+):
+    custom_logger.info(f"update_patient endpoint called for patient_id='{patient_id}'")
+    if patient_id != auth_id:
+        custom_logger.error(f"{auth_id} is tring to perform action of {patient_id}")
+        raise HTTPException(status_code=403, detail="Unauthorized action")
+
     db = get_db()
-    db_reult = db.patient.find_one({"patient_id": patient_id})
-
-    if db_reult == None:
-        custon_logger.info(f"Patient id='{patient_id}' not found")
-        raise HTTPException(
-            status_code=404, detail=f"Patient id='{patient_id}' not found"
-        )
-
     encoded_patient_details = jsonable_encoder(patient_details)
-    encoded_patient_details["patient_id"] = patient_id
-    update_result = db.patient.replace_one(
-        {"patient_id": patient_id}, encoded_patient_details
-    )
+
+    update_query = {"$set": encoded_patient_details}
+
+    update_result = db.patient.update_one({"patient_id": patient_id}, update_query)
 
     if update_result.modified_count == 1:
         return {"success": True, "message": "patient details is updated"}
@@ -95,18 +167,18 @@ async def get_patient(patient_id: str, patient_details: PatientInput):
     summary="Returns the EHR of a patient given a valid patient ID",
 )
 async def get_EHR(patient_id: str):
-    custon_logger.info(f"get_EHR endpoint called for patient_id='{patient_id}'")
+    custom_logger.info(f"get_EHR endpoint called for patient_id='{patient_id}'")
     db = get_db()
 
     db_reult = db.patient.find_one({"patient_id": patient_id})
 
     if db_reult == None:
-        custon_logger.info(f"Patient id='{patient_id}' not found")
+        custom_logger.info(f"Patient id='{patient_id}' not found")
         raise HTTPException(
             status_code=404, detail=f"Patient id='{patient_id}' not found"
         )
 
-    patient_details = Patient.parse_raw(json.dumps(db_reult, default=str))
+    patient_details = PatientOutput.parse_raw(json.dumps(db_reult, default=str))
 
     db_reult = db.test_result.find({"patient_id": patient_id})
 

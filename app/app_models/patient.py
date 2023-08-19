@@ -119,3 +119,6 @@ class PatientOutput(BaseModel):
 class PatientLoginInput(BaseModel):
     patient_id: str
     password: str
+
+    class Config:
+        schema_extra = {"example": {"patient_id": "0001", "password": "1234"}}

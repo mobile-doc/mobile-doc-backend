@@ -1,29 +1,30 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from fastapi.encoders import jsonable_encoder
 from ..app_models.EHR import Session, SymptomEntry, Prescription, UpdateSessionTimeInput
 import uuid
 import json
-from ..util import get_db, custom_logger
+from ..util import get_db, custom_logger, AuthHandler
 
 router = APIRouter()
+auth_handler = AuthHandler()
 
 
 @router.get(
     "/session/new/{patient_id}",
-    tags=["Session-Patient"],
+    tags=["Session-Patient-Doctor"],
     summary="Creates a new session between doctor and patient",
 )
-async def create_session(patient_id: str):
+async def create_session(
+    patient_id: str, auth_id: str = Depends(auth_handler.auth_wrapper)
+):
     custom_logger.info(f"create_session endpoint called for patient_id='{patient_id}'")
     db = get_db()
 
     db_reult = db.patient.find_one({"patient_id": patient_id})
 
-    if db_reult == None:
-        custom_logger.info(f"Patient id='{patient_id}' not found")
-        raise HTTPException(
-            status_code=404, detail=f"Patient id='{patient_id}' not found"
-        )
+    if patient_id != auth_id:
+        custom_logger.error(f"{auth_id} is tring to perform action of {patient_id}")
+        raise HTTPException(status_code=403, detail="Unauthorized action")
 
     session_id = uuid.uuid4().hex
     created_session = Session(session_id=session_id, patient_id=patient_id)
@@ -46,10 +47,12 @@ async def create_session(patient_id: str):
 
 @router.get(
     "/session/{session_id}",
-    tags=["Session-Patient"],
-    summary="Get all the details of a session. ",
+    tags=["Session-Patient-Doctor"],
+    summary="Get all the details of a session.",
 )
-async def get_session(session_id: str):
+async def get_session(
+    session_id: str, auth_id: str = Depends(auth_handler.auth_wrapper)
+):
     custom_logger.info(f"get_session endpoint called for session_id='{session_id}'")
     db = get_db()
     db_reult = db.session.find_one(
@@ -64,6 +67,15 @@ async def get_session(session_id: str):
 
     validated_session = Session.parse_obj(db_reult)
 
+    if (
+        validated_session.patient_id != auth_id
+        and validated_session.doctor_id != auth_id
+    ):
+        custom_logger.error(
+            f"{auth_id} is tring to perform action on session='{session_id}'"
+        )
+        raise HTTPException(status_code=403, detail="Unauthorized action")
+
     return {
         "success": True,
         "message": f"providing session details for session_id='{session_id}'",
@@ -73,10 +85,14 @@ async def get_session(session_id: str):
 
 @router.post(
     "/session/symptoms/{session_id}",
-    tags=["Session-Patient"],
+    tags=["Session-Patient-Doctor"],
     summary="Add a new symptom to existing session",
 )
-async def add_symptoms(session_id: str, symptom_entry: SymptomEntry):
+async def add_symptoms(
+    session_id: str,
+    symptom_entry: SymptomEntry,
+    auth_id: str = Depends(auth_handler.auth_wrapper),
+):
     custom_logger.info(f"add_symptoms endpoint called for session_id='{session_id}'")
     db = get_db()
 
@@ -87,6 +103,12 @@ async def add_symptoms(session_id: str, symptom_entry: SymptomEntry):
         raise HTTPException(
             status_code=404, detail=f"session id='{session_id}' not found"
         )
+
+    if db_reult["patient_id"] != auth_id and db_reult["doctor_id"] != auth_id:
+        custom_logger.error(
+            f"{auth_id} is tring to perform action on session='{session_id}'"
+        )
+        raise HTTPException(status_code=403, detail="Unauthorized action")
 
     symptom_dict_list = db_reult["symptom_list"]
     total_symptom_list = [x["symptom_name"] for x in symptom_dict_list]
@@ -133,10 +155,13 @@ async def add_symptoms(session_id: str, symptom_entry: SymptomEntry):
 
 @router.get(
     "/session/suggested_doctors/{session_id}",
-    tags=["Session-Patient"],
+    tags=["Session-Patient-Doctor"],
     summary="Suggests a list of doctors based on provided symptoms",
 )
-async def get_suggested_doctors(session_id: str):
+async def get_suggested_doctors(
+    session_id: str,
+    auth_id: str = Depends(auth_handler.auth_wrapper),
+):
     custom_logger.info(
         f"get_suggested_doctors endpoint called for session_id='{session_id}'"
     )
@@ -149,6 +174,12 @@ async def get_suggested_doctors(session_id: str):
         raise HTTPException(
             status_code=404, detail=f"session id='{session_id}' not found"
         )
+
+    if db_reult["patient_id"] != auth_id:
+        custom_logger.error(
+            f"{auth_id} is tring to perform action on session='{session_id}'"
+        )
+        raise HTTPException(status_code=403, detail="Unauthorized action")
 
     symptom_dict_list = db_reult["symptom_list"]
     symptom_list = [x["symptom_name"] for x in symptom_dict_list]
@@ -186,18 +217,20 @@ async def get_suggested_doctors(session_id: str):
 
 @router.post(
     "/session/update_session_time/{session_id}",
-    tags=["Session-Patient"],
+    tags=["Session-Patient-Doctor"],
     summary="Updates start_time and end_time for a session. ",
 )
 async def update_session_time(
-    session_id: str, input_updated_time: UpdateSessionTimeInput
+    session_id: str,
+    input_updated_time: UpdateSessionTimeInput,
+    auth_id: str = Depends(auth_handler.auth_wrapper),
 ):
     custom_logger.info(
         f"update_session_time endpoint called for session_id='{session_id}'"
     )
     db = get_db()
     db_reult = db.session.find_one(
-        filter={"session_id": session_id}, projection={"session_id": 1}
+        filter={"session_id": session_id}, projection={"_id": 0}
     )
 
     if db_reult == None:
@@ -205,6 +238,14 @@ async def update_session_time(
         raise HTTPException(
             status_code=404, detail=f"session id='{session_id}' not found"
         )
+
+    print(db_reult)
+
+    if db_reult["patient_id"] != auth_id and db_reult["doctor_id"] != auth_id:
+        custom_logger.error(
+            f"{auth_id} is tring to perform action on session='{session_id}'"
+        )
+        raise HTTPException(status_code=403, detail="Unauthorized action")
 
     start_time = input_updated_time.start_time
     end_time = input_updated_time.end_time
@@ -234,16 +275,20 @@ async def update_session_time(
 
 @router.post(
     "/session/update_session_doctor/{session_id}",
-    tags=["Session-Patient"],
+    tags=["Session-Patient-Doctor"],
     summary="Updates doctor_id for a session. ",
 )
-async def update_session_doctor(session_id: str, input_doctor_id: str):
+async def update_session_doctor(
+    session_id: str,
+    input_doctor_id: str,
+    auth_id: str = Depends(auth_handler.auth_wrapper),
+):
     custom_logger.info(
         f"update_session_doctor endpoint called for session_id='{session_id}'"
     )
     db = get_db()
     db_reult = db.session.find_one(
-        filter={"session_id": session_id}, projection={"session_id": 1}
+        filter={"session_id": session_id}, projection={"_id": 0}
     )
 
     if db_reult == None:
@@ -251,6 +296,12 @@ async def update_session_doctor(session_id: str, input_doctor_id: str):
         raise HTTPException(
             status_code=404, detail=f"session id='{session_id}' not found"
         )
+
+    if db_reult["patient_id"] != auth_id:
+        custom_logger.error(
+            f"{auth_id} is tring to perform action on session='{session_id}'"
+        )
+        raise HTTPException(status_code=403, detail="Unauthorized action")
 
     db_result = db.doctor.find_one(
         filter={"doctor_id": input_doctor_id}, projection={"doctor_id": 1}
@@ -286,16 +337,20 @@ async def update_session_doctor(session_id: str, input_doctor_id: str):
 
 @router.post(
     "/session/update_video_call_link/{session_id}",
-    tags=["Session-Patient"],
+    tags=["Session-Patient-Doctor"],
     summary="Updates video_call_link for a session. ",
 )
-async def update_video_call_link(session_id: str, input_video_call_link: str):
+async def update_video_call_link(
+    session_id: str,
+    input_video_call_link: str,
+    auth_id: str = Depends(auth_handler.auth_wrapper),
+):
     custom_logger.info(
         f"update_video_call_link endpoint called for session_id='{session_id}'"
     )
     db = get_db()
     db_reult = db.session.find_one(
-        filter={"session_id": session_id}, projection={"session_id": 1}
+        filter={"session_id": session_id}, projection={"_id": 0}
     )
 
     if db_reult == None:
@@ -303,6 +358,12 @@ async def update_video_call_link(session_id: str, input_video_call_link: str):
         raise HTTPException(
             status_code=404, detail=f"session id='{session_id}' not found"
         )
+
+    if db_reult["patient_id"] != auth_id and db_reult["doctor_id"] != auth_id:
+        custom_logger.error(
+            f"{auth_id} is tring to perform action on session='{session_id}'"
+        )
+        raise HTTPException(status_code=403, detail="Unauthorized action")
 
     db_update = db.session.update_one(
         {"session_id": session_id},
@@ -328,16 +389,20 @@ async def update_video_call_link(session_id: str, input_video_call_link: str):
 
 @router.put(
     "/session/update_prescription/{session_id}",
-    tags=["Session-Doctor"],
+    tags=["Session-Patient-Doctor"],
     summary="Updates prescription for a session. ",
 )
-async def update_prescription(session_id: str, input_prescription: Prescription):
+async def update_prescription(
+    session_id: str,
+    input_prescription: Prescription,
+    auth_id: str = Depends(auth_handler.auth_wrapper),
+):
     custom_logger.info(
         f"update_prescription endpoint called for session_id='{session_id}'"
     )
     db = get_db()
     db_reult = db.session.find_one(
-        filter={"session_id": session_id}, projection={"session_id": 1}
+        filter={"session_id": session_id}, projection={"_id": 0}
     )
 
     if db_reult == None:
@@ -345,6 +410,12 @@ async def update_prescription(session_id: str, input_prescription: Prescription)
         raise HTTPException(
             status_code=404, detail=f"session id='{session_id}' not found"
         )
+
+    if db_reult["doctor_id"] != auth_id:
+        custom_logger.error(
+            f"{auth_id} is tring to perform action on session='{session_id}'"
+        )
+        raise HTTPException(status_code=403, detail="Unauthorized action")
 
     diagnosis = input_prescription.diagnosis
     advice = input_prescription.advice

@@ -81,8 +81,55 @@ class TestFileEntry(BaseModel):
 
 
 class TestResult(BaseModel):
-    test_result_id: str
     test_name: str
+    test_center: str
     date: datetime
     numeric_results: Optional[list[TestDataEntry]]
     test_files: Optional[list[TestFileEntry]]
+
+
+class TestResultInput(BaseModel):
+    schema_name: Optional[str]
+    test_result: TestResult
+    api_key: str
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "schema_name": "CBC",
+                "test_result": {
+                    "test_name": "CBC (Complete Blood Count)",
+                    "test_center": "Ibn Sina Diagonistics Center",
+                    "date": "2023-08-21T00:00:00",
+                    "numeric_results": [
+                        {
+                            "data_element": "WBC",
+                            "data_value": 5.0,
+                            "data_unit": "x10^9/L",
+                        },
+                        {
+                            "data_element": "RBC",
+                            "data_value": 4.5,
+                            "data_unit": "x10^12/L",
+                        },
+                        {
+                            "data_element": "Hemoglobin",
+                            "data_value": 14.0,
+                            "data_unit": "g/dL",
+                        },
+                        {
+                            "data_element": "Hematocrit",
+                            "data_value": 42.0,
+                            "data_unit": "%",
+                        },
+                        {
+                            "data_element": "Platelets",
+                            "data_value": 150.0,
+                            "data_unit": "x10^9/L",
+                        },
+                    ],
+                    "test_files": [],
+                },
+                "api_key": "your_api_key_here",
+            }
+        }

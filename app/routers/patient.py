@@ -3,7 +3,6 @@ from fastapi.encoders import jsonable_encoder
 from ..app_models.patient import (
     Patient,
     UpdatePatientInput,
-    PatientLoginInput,
     PatientOutput,
 )
 from ..app_models.EHR import TestResult, Session
@@ -25,9 +24,10 @@ async def create_patient(patient_details: Patient):
     custom_logger.info(f"create_patient endpoint called")
     # checking if patient_id already exists.
     db = get_db()
-    db_reult = db.patient.find_one({"patient_id": patient_details.patient_id})
+    db_reult_1 = db.patient.find_one({"patient_id": patient_details.patient_id})
+    db_reult_2 = db.doctor.find_one({"doctor_id": patient_details.patient_id})
 
-    if db_reult:
+    if db_reult_1 or db_reult_2:
         return {"success": False, "message": "patient_id exists. Try another one"}
     else:
         patient_details.password = auth_handler.get_password_hash(
@@ -48,31 +48,6 @@ async def create_patient(patient_details: Patient):
                 "success": False,
                 "message": "patient could not be inserted. potential db issue",
             }
-
-
-@router.post(
-    "/patient/login",
-    tags=["Patient"],
-    summary="Create access and refresh tokens for user",
-)
-async def login(patient_login_input: PatientLoginInput):
-    db = get_db()
-    db_reult = db.patient.find_one({"patient_id": patient_login_input.patient_id})
-
-    if db_reult is None:
-        raise HTTPException(
-            status_code=400,
-            detail="Incorrect email or password",
-        )
-
-    hashed_pass = db_reult["password"]
-    if not auth_handler.verify_password(patient_login_input.password, hashed_pass):
-        raise HTTPException(
-            status_code=400,
-            detail="Incorrect email or password",
-        )
-    token = auth_handler.encode_token(patient_login_input.patient_id)
-    return {"token": token}
 
 
 @router.get(

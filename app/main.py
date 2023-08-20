@@ -1,12 +1,13 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .routers import status, patient, medicine, session, doctor
+from .routers import status, patient, medicine, session, doctor, authentication
 from .constants import PROJECT_NAME, VERSION_NAME
 
 
 def start_application(title, version):
     application = FastAPI(title=title, version=version)
     application.include_router(status.router)
+    application.include_router(authentication.router)
     application.include_router(patient.router)
     application.include_router(medicine.router)
     application.include_router(session.router)

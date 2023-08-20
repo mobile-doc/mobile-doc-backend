@@ -114,11 +114,3 @@ class PatientOutput(BaseModel):
     profession: str
     general_information: GeneralInformation
     physical_attributes: Optional[list[PhysicalAttribute]]
-
-
-class PatientLoginInput(BaseModel):
-    patient_id: str
-    password: str
-
-    class Config:
-        schema_extra = {"example": {"patient_id": "0001", "password": "1234"}}

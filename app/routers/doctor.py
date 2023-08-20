@@ -102,6 +102,15 @@ async def get_sessions(doctor_id: str, auth_id=Depends(auth_handler.auth_wrapper
 
     doctor_sessions = [Session.parse_raw(json.dumps(x, default=str)) for x in db_result]
 
+    doctor_sessions = [x.dict() for x in doctor_sessions]
+
+    for doctor_session in doctor_sessions:
+        db_result = db.patient.find_one(
+            filter={"patient_id": doctor_session["patient_id"]}, projection={"name": 1}
+        )
+        doctor_name = db_result["name"] if db_result else None
+        doctor_session["patient_name"] = doctor_name
+
     return {
         "success": True,
         "doctor_sessions": doctor_sessions,

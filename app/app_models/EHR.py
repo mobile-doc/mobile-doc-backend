@@ -82,7 +82,7 @@ class TestFileEntry(BaseModel):
 
 class TestResult(BaseModel):
     test_name: str
-    test_center: str
+    test_center: Optional[str]
     date: datetime
     numeric_results: Optional[list[TestDataEntry]]
     test_files: Optional[list[TestFileEntry]]

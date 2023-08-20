@@ -180,9 +180,9 @@ async def get_sessions(patient_id: str, auth_id=Depends(auth_handler.auth_wrappe
 @router.get(
     "/patient/EHR/{patient_id}",
     tags=["Patient"],
-    summary="Returns the EHR of a patient given a valid patient ID",
+    summary="Returns the EHR of a patient given a valid patient ID. (Authorization: Patiend and his/her doctor)",
 )
-async def get_EHR(patient_id: str):
+async def get_EHR(patient_id: str, auth_id=Depends(auth_handler.auth_wrapper)):
     custom_logger.info(f"get_EHR endpoint called for patient_id='{patient_id}'")
     db = get_db()
 
@@ -205,6 +205,12 @@ async def get_EHR(patient_id: str):
     patient_sessions = [
         Session.parse_raw(json.dumps(x, default=str)) for x in db_result
     ]
+
+    all_doctors_of_this_patient = set([x.doctor_id for x in patient_sessions])
+
+    if patient_id != auth_id and auth_id not in all_doctors_of_this_patient:
+        custom_logger.error(f"{auth_id} is tring to perform action of {patient_id}")
+        raise HTTPException(status_code=403, detail="Unauthorized action")
 
     return {
         "success": True,

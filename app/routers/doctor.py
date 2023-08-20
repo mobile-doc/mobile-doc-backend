@@ -1,8 +1,9 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from fastapi.encoders import jsonable_encoder
 import json
 from ..util import get_db, custom_logger, AuthHandler
 from ..app_models.doctor import Doctor, DoctorOutput
+from ..app_models.EHR import Session
 
 router = APIRouter()
 
@@ -74,4 +75,34 @@ async def get_doctor(doctor_id: str):
     return {
         "success": True,
         "doctor": validated_result,
+    }
+
+
+@router.get(
+    "/doctor/{doctor_id}/all_sessions",
+    tags=["Doctor"],
+    summary="Returns all the sessions of a doctor given a valid doctor ID",
+)
+async def get_sessions(doctor_id: str, auth_id=Depends(auth_handler.auth_wrapper)):
+    custom_logger.info(f"get_sessions endpoint called for doctor_id='{doctor_id}'")
+    if doctor_id != auth_id:
+        custom_logger.error(f"{auth_id} is tring to perform action of {doctor_id}")
+        raise HTTPException(status_code=403, detail="Unauthorized action")
+
+    db = get_db()
+    db_result = db.doctor.find_one({"doctor_id": doctor_id})
+
+    if db_result == None:
+        custom_logger.info(f"doctor_id='{doctor_id}' not found")
+        raise HTTPException(
+            status_code=404, detail=f"doctor id='{doctor_id}' not found"
+        )
+
+    db_result = db.session.find({"doctor_id": doctor_id})
+
+    doctor_sessions = [Session.parse_raw(json.dumps(x, default=str)) for x in db_result]
+
+    return {
+        "success": True,
+        "doctor_sessions": doctor_sessions,
     }

@@ -137,6 +137,38 @@ async def update_patient(
 
 
 @router.get(
+    "/patient/{patient_id}/all_sessions",
+    tags=["Patient"],
+    summary="Returns all the sessions of a patient given a valid patient ID",
+)
+async def get_sessions(patient_id: str, auth_id=Depends(auth_handler.auth_wrapper)):
+    custom_logger.info(f"get_sessions endpoint called for patient_id='{patient_id}'")
+    if patient_id != auth_id:
+        custom_logger.error(f"{auth_id} is tring to perform action of {patient_id}")
+        raise HTTPException(status_code=403, detail="Unauthorized action")
+
+    db = get_db()
+    db_result = db.patient.find_one({"patient_id": patient_id})
+
+    if db_result == None:
+        custom_logger.info(f"Patient id='{patient_id}' not found")
+        raise HTTPException(
+            status_code=404, detail=f"Patient id='{patient_id}' not found"
+        )
+
+    db_result = db.session.find({"patient_id": patient_id})
+
+    patient_sessions = [
+        Session.parse_raw(json.dumps(x, default=str)) for x in db_result
+    ]
+
+    return {
+        "success": True,
+        "patient_sessions": patient_sessions,
+    }
+
+
+@router.get(
     "/patient/EHR/{patient_id}",
     tags=["Patient"],
     summary="Returns the EHR of a patient given a valid patient ID",

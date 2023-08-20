@@ -3,7 +3,6 @@ from fastapi.encoders import jsonable_encoder
 from ..app_models.patient import (
     Patient,
     UpdatePatientInput,
-    PatientLoginInput,
     PatientOutput,
 )
 from ..app_models.EHR import TestResult, Session
@@ -25,9 +24,10 @@ async def create_patient(patient_details: Patient):
     custom_logger.info(f"create_patient endpoint called")
     # checking if patient_id already exists.
     db = get_db()
-    db_reult = db.patient.find_one({"patient_id": patient_details.patient_id})
+    db_result_1 = db.patient.find_one({"patient_id": patient_details.patient_id})
+    db_result_2 = db.doctor.find_one({"doctor_id": patient_details.patient_id})
 
-    if db_reult:
+    if db_result_1 or db_result_2:
         return {"success": False, "message": "patient_id exists. Try another one"}
     else:
         patient_details.password = auth_handler.get_password_hash(
@@ -48,31 +48,6 @@ async def create_patient(patient_details: Patient):
                 "success": False,
                 "message": "patient could not be inserted. potential db issue",
             }
-
-
-@router.post(
-    "/patient/login",
-    tags=["Patient"],
-    summary="Create access and refresh tokens for user",
-)
-async def login(patient_login_input: PatientLoginInput):
-    db = get_db()
-    db_reult = db.patient.find_one({"patient_id": patient_login_input.patient_id})
-
-    if db_reult is None:
-        raise HTTPException(
-            status_code=400,
-            detail="Incorrect email or password",
-        )
-
-    hashed_pass = db_reult["password"]
-    if not auth_handler.verify_password(patient_login_input.password, hashed_pass):
-        raise HTTPException(
-            status_code=400,
-            detail="Incorrect email or password",
-        )
-    token = auth_handler.encode_token(patient_login_input.patient_id)
-    return {"token": token}
 
 
 @router.get(
@@ -103,9 +78,9 @@ async def get_patient(patient_id: str, auth_id=Depends(auth_handler.auth_wrapper
         custom_logger.info(f"Cache Miss! {patient_redis_key=}")
 
         db = get_db()
-        db_reult = db.patient.find_one({"patient_id": patient_id})
+        db_result = db.patient.find_one({"patient_id": patient_id})
 
-        if db_reult == None:
+        if db_result == None:
             custom_logger.info(f"Patient id='{patient_id}' not found")
             raise HTTPException(
                 status_code=404, detail=f"Patient id='{patient_id}' not found"
@@ -113,7 +88,7 @@ async def get_patient(patient_id: str, auth_id=Depends(auth_handler.auth_wrapper
 
         try:
             validated_result = PatientOutput.parse_raw(
-                json.dumps(db_reult, default=str)
+                json.dumps(db_result, default=str)
             )
         except:
             custom_logger.error(
@@ -170,23 +145,25 @@ async def get_EHR(patient_id: str):
     custom_logger.info(f"get_EHR endpoint called for patient_id='{patient_id}'")
     db = get_db()
 
-    db_reult = db.patient.find_one({"patient_id": patient_id})
+    db_result = db.patient.find_one({"patient_id": patient_id})
 
-    if db_reult == None:
+    if db_result == None:
         custom_logger.info(f"Patient id='{patient_id}' not found")
         raise HTTPException(
             status_code=404, detail=f"Patient id='{patient_id}' not found"
         )
 
-    patient_details = PatientOutput.parse_raw(json.dumps(db_reult, default=str))
+    patient_details = PatientOutput.parse_raw(json.dumps(db_result, default=str))
 
-    db_reult = db.test_result.find({"patient_id": patient_id})
+    db_result = db.test_result.find({"patient_id": patient_id})
 
-    test_results = [TestResult.parse_raw(json.dumps(x, default=str)) for x in db_reult]
+    test_results = [TestResult.parse_raw(json.dumps(x, default=str)) for x in db_result]
 
-    db_reult = db.session.find({"patient_id": patient_id})
+    db_result = db.session.find({"patient_id": patient_id})
 
-    patient_sessions = [Session.parse_raw(json.dumps(x, default=str)) for x in db_reult]
+    patient_sessions = [
+        Session.parse_raw(json.dumps(x, default=str)) for x in db_result
+    ]
 
     return {
         "success": True,

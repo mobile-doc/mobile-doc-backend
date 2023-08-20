@@ -25,7 +25,7 @@ class Doctor(BaseModel):
         regex="Neurologist|Cardiologist|ENT|Gastroenterologist|Pulmonologist|Medicine|Orthopedist|OBGYN"
     )
     availability: List[DailyAvailability]
-    calendar: Optional[List[SessionDetails]]
+    calendar: Optional[List[SessionDetails]] = []
 
     class Config:
         schema_extra = {

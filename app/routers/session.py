@@ -279,7 +279,7 @@ async def update_session_time(
         },
     )
 
-    if db_update.modified_count == 1 and doctor_db_update.modified_count == 1:
+    if db_update.modified_count == 1 or doctor_db_update.modified_count == 1:
         return {
             "success": True,
             "message": f"Session time was updated for session_id='{session_id}'",

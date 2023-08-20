@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.encoders import jsonable_encoder
 from ..app_models.EHR import Session, SymptomEntry, Prescription, UpdateSessionTimeInput
+from ..app_models.doctor import SessionDetails
 import uuid
 import json
 from ..util import get_db, custom_logger, AuthHandler
@@ -239,6 +240,13 @@ async def update_session_time(
             status_code=404, detail=f"session id='{session_id}' not found"
         )
 
+    session_doctor = db_reult["doctor_id"]
+    if session_doctor is None:
+        return {
+            "success": False,
+            "message": f"First select a doctor before changing time for session_id='{session_id}'",
+        }
+
     print(db_reult)
 
     if db_reult["patient_id"] != auth_id and db_reult["doctor_id"] != auth_id:
@@ -260,7 +268,18 @@ async def update_session_time(
         },
     )
 
-    if db_update.modified_count == 1:
+    doctor_db_update = db.doctor.update_one(
+        {"doctor_id": session_doctor},
+        {
+            "$push": {
+                "calendar": SessionDetails(
+                    start_time=start_time, end_time=end_time, session_id=session_id
+                ).dict()
+            }
+        },
+    )
+
+    if db_update.modified_count == 1 or doctor_db_update.modified_count == 1:
         return {
             "success": True,
             "message": f"Session time was updated for session_id='{session_id}'",

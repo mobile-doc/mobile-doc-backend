@@ -5,13 +5,12 @@ from datetime import datetime, time
 
 class DailyAvailability(BaseModel):
     day_of_the_week: constr(regex="sat|sun|mon|tue|wed|thu|fri")
-    day_start_time: time
-    day_end_time: time
+    day_start_times: List[time]
 
 
 class SessionDetails(BaseModel):
-    session_starttime: datetime
-    session_endtime: datetime
+    start_time: datetime
+    end_time: datetime
     session_id: Optional[str]
 
 
@@ -22,7 +21,9 @@ class Doctor(BaseModel):
     password: str
     designation: str
     degrees: str  # list of degrees seperated by comma
-    speciality: str
+    speciality: constr(
+        regex="Neurologist|Cardiologist|ENT|Gastroenterologist|Pulmonologist|Medicine|Orthopedist|OBGYN"
+    )
     availability: List[DailyAvailability]
     calendar: Optional[List[SessionDetails]]
 
@@ -39,38 +40,31 @@ class Doctor(BaseModel):
                 "availability": [
                     {
                         "day_of_the_week": "mon",
-                        "day_start_time": "09:00:00",
-                        "day_end_time": "17:00:00",
+                        "day_start_times": ["09:00:00", "09:15:00", "09:30:00"],
                     },
                     {
                         "day_of_the_week": "tue",
-                        "day_start_time": "09:00:00",
-                        "day_end_time": "17:00:00",
+                        "day_start_times": ["09:00:00", "09:15:00", "09:30:00"],
                     },
                     {
                         "day_of_the_week": "wed",
-                        "day_start_time": "09:00:00",
-                        "day_end_time": "17:00:00",
+                        "day_start_times": ["09:00:00", "09:15:00", "09:30:00"],
                     },
                     {
                         "day_of_the_week": "thu",
-                        "day_start_time": "09:00:00",
-                        "day_end_time": "17:00:00",
+                        "day_start_times": ["09:00:00", "09:15:00", "09:30:00"],
                     },
                     {
                         "day_of_the_week": "fri",
-                        "day_start_time": "09:00:00",
-                        "day_end_time": "17:00:00",
+                        "day_start_times": ["09:00:00", "09:15:00", "09:30:00"],
                     },
                     {
                         "day_of_the_week": "sat",
-                        "day_start_time": "09:00:00",
-                        "day_end_time": "13:00:00",
+                        "day_start_times": ["09:00:00", "09:15:00", "09:30:00"],
                     },
                     {
                         "day_of_the_week": "sun",
-                        "day_start_time": "09:00:00",
-                        "day_end_time": "13:00:00",
+                        "day_start_times": ["09:00:00", "09:15:00", "09:30:00"],
                     },
                 ],
             }
@@ -80,9 +74,9 @@ class Doctor(BaseModel):
 class DoctorOutput(BaseModel):
     doctor_id: str
     name: str
-    email: str
+    email: Optional[str]
     designation: str
     degrees: str
     speciality: str
-    availability: List[DailyAvailability]
+    availability: Optional[List[DailyAvailability]]
     calendar: Optional[List[SessionDetails]]

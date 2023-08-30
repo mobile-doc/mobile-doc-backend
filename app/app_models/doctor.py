@@ -80,3 +80,56 @@ class DoctorOutput(BaseModel):
     speciality: str
     availability: Optional[List[DailyAvailability]]
     calendar: Optional[List[SessionDetails]]
+
+
+class DoctorUpdateInput(BaseModel):
+    name: str
+    email: str
+    designation: str
+    degrees: str  # list of degrees seperated by comma
+    speciality: constr(
+        regex="Neurologist|Cardiologist|ENT|Gastroenterologist|Pulmonologist|Medicine|Orthopedist|OBGYN"
+    )
+    availability: List[DailyAvailability]
+    calendar: Optional[List[SessionDetails]] = []
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "name": "Dr. Abdul Malik",
+                "email": "dr.abdul.malik@example.com",
+                "designation": "Senior Consultant",
+                "degrees": "MBBS, MD (Internal Medicine), DM (Medicine)",
+                "speciality": "Medicine",
+                "availability": [
+                    {
+                        "day_of_the_week": "mon",
+                        "day_start_times": ["09:00:00", "09:15:00", "09:30:00"],
+                    },
+                    {
+                        "day_of_the_week": "tue",
+                        "day_start_times": ["09:00:00", "09:15:00", "09:30:00"],
+                    },
+                    {
+                        "day_of_the_week": "wed",
+                        "day_start_times": ["09:00:00", "09:15:00", "09:30:00"],
+                    },
+                    {
+                        "day_of_the_week": "thu",
+                        "day_start_times": ["09:00:00", "09:15:00", "09:30:00"],
+                    },
+                    {
+                        "day_of_the_week": "fri",
+                        "day_start_times": ["09:00:00", "09:15:00", "09:30:00"],
+                    },
+                    {
+                        "day_of_the_week": "sat",
+                        "day_start_times": ["09:00:00", "09:15:00", "09:30:00"],
+                    },
+                    {
+                        "day_of_the_week": "sun",
+                        "day_start_times": ["09:00:00", "09:15:00", "09:30:00"],
+                    },
+                ],
+            }
+        }

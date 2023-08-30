@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from fastapi.encoders import jsonable_encoder
 import json
 from ..util import get_db, custom_logger, AuthHandler
-from ..app_models.doctor import Doctor, DoctorOutput
+from ..app_models.doctor import Doctor, DoctorOutput, DoctorUpdateInput
 from ..app_models.EHR import Session
 
 router = APIRouter()
@@ -78,6 +78,39 @@ async def get_doctor(doctor_id: str):
     }
 
 
+@router.put(
+    "/doctor/{doctor_id}",
+    tags=["Doctor"],
+    summary="Updates profile of a doctor for a valid doctor_id",
+)
+async def update_doctor(
+    doctor_id: str,
+    doctor_details: DoctorUpdateInput,
+    auth_id=Depends(auth_handler.auth_wrapper),
+):
+    custom_logger.info(f"update_doctor endpoint called for doctor_id={doctor_id}")
+    if doctor_id != auth_id:
+        custom_logger.error(f"{auth_id} is trying to perform action of {doctor_id}")
+        raise HTTPException(status_code=403, detail="Unauthorized action")
+
+    db = get_db()
+
+    update_result = db.doctor.update_one(
+        {"doctor_id": doctor_id}, {"$set": jsonable_encoder(doctor_details)}
+    )
+
+    if update_result.modified_count == 1:
+        return {
+            "success": True,
+            "message": f"doctor_id='{doctor_id}' was updated successfully",
+        }
+    else:
+        return {
+            "success": False,
+            "message": f"doctor_id='{doctor_id}' was not updated. potential db issue",
+        }
+
+
 @router.get(
     "/doctor/{doctor_id}/all_sessions",
     tags=["Doctor"],
@@ -86,7 +119,7 @@ async def get_doctor(doctor_id: str):
 async def get_sessions(doctor_id: str, auth_id=Depends(auth_handler.auth_wrapper)):
     custom_logger.info(f"get_sessions endpoint called for doctor_id='{doctor_id}'")
     if doctor_id != auth_id:
-        custom_logger.error(f"{auth_id} is tring to perform action of {doctor_id}")
+        custom_logger.error(f"{auth_id} is trying to perform action of {doctor_id}")
         raise HTTPException(status_code=403, detail="Unauthorized action")
 
     db = get_db()

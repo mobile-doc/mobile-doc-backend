@@ -128,6 +128,10 @@ async def update_patient(
 
     update_query = {"$set": encoded_patient_details}
 
+    # delete the redis cache
+    patient_redis_key = "patient_" + patient_id
+    redis_client.delete(patient_redis_key)
+
     update_result = db.patient.update_one({"patient_id": patient_id}, update_query)
 
     if update_result.modified_count == 1:

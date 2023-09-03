@@ -21,7 +21,13 @@ async def create_session(
     custom_logger.info(f"create_session endpoint called for patient_id='{patient_id}'")
     db = get_db()
 
-    db_reult = db.patient.find_one({"patient_id": patient_id})
+    db_result = db.patient.find_one({"patient_id": patient_id})
+
+    if db_result == None:
+        custom_logger.error(f"patient {patient_id} does not exist")
+        raise HTTPException(
+            status_code=404, detail=f"patient_id={patient_id} not found"
+        )
 
     if patient_id != auth_id:
         custom_logger.error(f"{auth_id} is tring to perform action of {patient_id}")
@@ -56,17 +62,17 @@ async def get_session(
 ):
     custom_logger.info(f"get_session endpoint called for session_id='{session_id}'")
     db = get_db()
-    db_reult = db.session.find_one(
+    db_result = db.session.find_one(
         filter={"session_id": session_id}, projection={"_id": 0}
     )
 
-    if db_reult == None:
+    if db_result == None:
         custom_logger.info(f"session id='{session_id}' not found")
         raise HTTPException(
             status_code=404, detail=f"session id='{session_id}' not found"
         )
 
-    validated_session = Session.parse_obj(db_reult)
+    validated_session = Session.parse_obj(db_result)
 
     if (
         validated_session.patient_id != auth_id
@@ -97,21 +103,21 @@ async def add_symptoms(
     custom_logger.info(f"add_symptoms endpoint called for session_id='{session_id}'")
     db = get_db()
 
-    db_reult = db.session.find_one({"session_id": session_id})
+    db_result = db.session.find_one({"session_id": session_id})
 
-    if db_reult == None:
+    if db_result == None:
         custom_logger.info(f"session id='{session_id}' not found")
         raise HTTPException(
             status_code=404, detail=f"session id='{session_id}' not found"
         )
 
-    if db_reult["patient_id"] != auth_id and db_reult["doctor_id"] != auth_id:
+    if db_result["patient_id"] != auth_id and db_result["doctor_id"] != auth_id:
         custom_logger.error(
             f"{auth_id} is tring to perform action on session='{session_id}'"
         )
         raise HTTPException(status_code=403, detail="Unauthorized action")
 
-    symptom_dict_list = db_reult["symptom_list"]
+    symptom_dict_list = db_result["symptom_list"]
     total_symptom_list = [x["symptom_name"] for x in symptom_dict_list]
     total_symptom_list.append(symptom_entry.symptom_name)
 
@@ -168,21 +174,21 @@ async def get_suggested_doctors(
     )
     db = get_db()
 
-    db_reult = db.session.find_one({"session_id": session_id})
+    db_result = db.session.find_one({"session_id": session_id})
 
-    if db_reult == None:
+    if db_result == None:
         custom_logger.info(f"session id='{session_id}' not found")
         raise HTTPException(
             status_code=404, detail=f"session id='{session_id}' not found"
         )
 
-    if db_reult["patient_id"] != auth_id:
+    if db_result["patient_id"] != auth_id:
         custom_logger.error(
             f"{auth_id} is tring to perform action on session='{session_id}'"
         )
         raise HTTPException(status_code=403, detail="Unauthorized action")
 
-    symptom_dict_list = db_reult["symptom_list"]
+    symptom_dict_list = db_result["symptom_list"]
     symptom_list = [x["symptom_name"] for x in symptom_dict_list]
     symptom_list = set(symptom_list)
 
@@ -230,19 +236,19 @@ async def update_session_time(
         f"update_session_time endpoint called for session_id='{session_id}'"
     )
     db = get_db()
-    db_reult = db.session.find_one(
+    db_result = db.session.find_one(
         filter={"session_id": session_id}, projection={"_id": 0}
     )
 
-    if db_reult == None:
+    if db_result == None:
         custom_logger.info(f"session id='{session_id}' not found")
         raise HTTPException(
             status_code=404, detail=f"session id='{session_id}' not found"
         )
 
-    session_doctor = db_reult["doctor_id"]
-    old_start_time = db_reult["start_time"]
-    old_end_time = db_reult["end_time"]
+    session_doctor = db_result["doctor_id"]
+    old_start_time = db_result["start_time"]
+    old_end_time = db_result["end_time"]
 
     if session_doctor is None:
         return {
@@ -250,9 +256,9 @@ async def update_session_time(
             "message": f"First select a doctor before changing time for session_id='{session_id}'",
         }
 
-    print(db_reult)
+    print(db_result)
 
-    if db_reult["patient_id"] != auth_id and db_reult["doctor_id"] != auth_id:
+    if db_result["patient_id"] != auth_id and db_result["doctor_id"] != auth_id:
         custom_logger.error(
             f"{auth_id} is tring to perform action on session='{session_id}'"
         )
@@ -322,17 +328,17 @@ async def update_session_doctor(
         f"update_session_doctor endpoint called for session_id='{session_id}'"
     )
     db = get_db()
-    db_reult = db.session.find_one(
+    db_result = db.session.find_one(
         filter={"session_id": session_id}, projection={"_id": 0}
     )
 
-    if db_reult == None:
+    if db_result == None:
         custom_logger.info(f"session id='{session_id}' not found")
         raise HTTPException(
             status_code=404, detail=f"session id='{session_id}' not found"
         )
 
-    if db_reult["patient_id"] != auth_id:
+    if db_result["patient_id"] != auth_id:
         custom_logger.error(
             f"{auth_id} is tring to perform action on session='{session_id}'"
         )
@@ -342,7 +348,7 @@ async def update_session_doctor(
         filter={"doctor_id": input_doctor_id}, projection={"doctor_id": 1}
     )
 
-    if db_reult == None:
+    if db_result == None:
         custom_logger.info(f"doctor_id id='{input_doctor_id}' not found")
         raise HTTPException(
             status_code=404, detail=f"doctor_id id='{input_doctor_id}' not found"
@@ -384,17 +390,17 @@ async def update_video_call_link(
         f"update_video_call_link endpoint called for session_id='{session_id}'"
     )
     db = get_db()
-    db_reult = db.session.find_one(
+    db_result = db.session.find_one(
         filter={"session_id": session_id}, projection={"_id": 0}
     )
 
-    if db_reult == None:
+    if db_result == None:
         custom_logger.info(f"session id='{session_id}' not found")
         raise HTTPException(
             status_code=404, detail=f"session id='{session_id}' not found"
         )
 
-    if db_reult["patient_id"] != auth_id and db_reult["doctor_id"] != auth_id:
+    if db_result["patient_id"] != auth_id and db_result["doctor_id"] != auth_id:
         custom_logger.error(
             f"{auth_id} is tring to perform action on session='{session_id}'"
         )
@@ -436,17 +442,17 @@ async def update_prescription(
         f"update_prescription endpoint called for session_id='{session_id}'"
     )
     db = get_db()
-    db_reult = db.session.find_one(
+    db_result = db.session.find_one(
         filter={"session_id": session_id}, projection={"_id": 0}
     )
 
-    if db_reult == None:
+    if db_result == None:
         custom_logger.info(f"session id='{session_id}' not found")
         raise HTTPException(
             status_code=404, detail=f"session id='{session_id}' not found"
         )
 
-    if db_reult["doctor_id"] != auth_id:
+    if db_result["doctor_id"] != auth_id:
         custom_logger.error(
             f"{auth_id} is tring to perform action on session='{session_id}'"
         )

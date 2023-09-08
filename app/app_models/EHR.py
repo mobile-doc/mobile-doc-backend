@@ -37,6 +37,7 @@ class Session(BaseModel):
     advice: Optional[str]
     symptom_list: Optional[List[SymptomEntry]] = []
     suggested_test_list: Optional[list[str]] = []
+    suggested_medicine_list: Optional[list[str]] = []
 
 
 class UpdateSessionTimeInput(BaseModel):

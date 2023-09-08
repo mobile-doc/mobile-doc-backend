@@ -3,7 +3,6 @@ from fastapi.encoders import jsonable_encoder
 from ..app_models.EHR import Session, SymptomEntry, Prescription, UpdateSessionTimeInput
 from ..app_models.doctor import SessionDetails
 import uuid
-import json
 from ..util import get_db, custom_logger, AuthHandler
 
 router = APIRouter()
@@ -458,17 +457,14 @@ async def update_prescription(
         )
         raise HTTPException(status_code=403, detail="Unauthorized action")
 
-    diagnosis = input_prescription.diagnosis
-    advice = input_prescription.advice
-    suggested_test_list = input_prescription.suggested_test_list
-
     db_update = db.session.update_one(
         {"session_id": session_id},
         {
             "$set": {
-                "diagnosis": diagnosis,
-                "advice": advice,
-                "suggested_test_list": suggested_test_list,
+                "diagnosis": input_prescription.diagnosis,
+                "advice": input_prescription.advice,
+                "suggested_test_list": input_prescription.suggested_test_list,
+                "suggested_medicine_list": input_prescription.suggested_medicine_list,
             }
         },
     )

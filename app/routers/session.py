@@ -84,7 +84,7 @@ async def get_session(
         and validated_session.doctor_id != auth_id
     ):
         custom_logger.error(
-            f"{auth_id} is tring to perform action on session='{session_id}'"
+            f"{auth_id} is trying to perform action on session='{session_id}'"
         )
         raise HTTPException(status_code=403, detail="Unauthorized action")
 
@@ -118,7 +118,7 @@ async def add_symptoms(
 
     if db_result["patient_id"] != auth_id and db_result["doctor_id"] != auth_id:
         custom_logger.error(
-            f"{auth_id} is tring to perform action on session='{session_id}'"
+            f"{auth_id} is trying to perform action on session='{session_id}'"
         )
         raise HTTPException(status_code=403, detail="Unauthorized action")
 
@@ -307,6 +307,22 @@ async def update_session_time(
     )
 
     if db_update.modified_count == 1 or doctor_db_update.modified_count == 1:
+        # add notification to doctor
+        notification = Notification(
+            message="Session time updated",
+            session_id=session_id,
+            user_id=session_doctor,
+        )
+        db.notification.insert_one(jsonable_encoder(notification))
+
+        # add notification to patient
+        notification = Notification(
+            message="Session time updated",
+            session_id=session_id,
+            user_id=db_result["patient_id"],
+        )
+        db.notification.insert_one(jsonable_encoder(notification))
+
         return {
             "success": True,
             "message": f"Session time was updated for session_id='{session_id}'",
@@ -421,6 +437,21 @@ async def update_video_call_link(
     )
 
     if db_update.modified_count == 1:
+        # add notification to doctor
+        notification = Notification(
+            message="Session link updated",
+            session_id=session_id,
+            user_id=db_result["doctor_id"],
+        )
+        db.notification.insert_one(jsonable_encoder(notification))
+
+        # add notification to patient
+        notification = Notification(
+            message="Session link updated",
+            session_id=session_id,
+            user_id=db_result["patient_id"],
+        )
+        db.notification.insert_one(jsonable_encoder(notification))
         return {
             "success": True,
             "message": f"Session doctor was updated for session_id='{session_id}'",
@@ -476,6 +507,13 @@ async def update_prescription(
     )
 
     if db_update.modified_count == 1:
+        # add notification to patient
+        notification = Notification(
+            message="Session link updated",
+            session_id=session_id,
+            user_id=db_result["patient_id"],
+        )
+        db.notification.insert_one(jsonable_encoder(notification))
         return {
             "success": True,
             "message": f"Prescription was updated for session_id='{session_id}'",

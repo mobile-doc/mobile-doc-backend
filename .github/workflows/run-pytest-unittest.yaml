@@ -11,26 +11,13 @@ jobs:
     runs-on: ubuntu-22.04
     
     steps:
-    - uses: actions/checkout@v3
+    - uses: 'actions/checkout@v3'
 
-    - name: Set up Python 3.11.0
-      uses: actions/setup-python@v4
+    - id: 'auth'
+      name: 'Authenticate to Google Cloud'
+      uses: 'google-github-actions/auth@v1'
       with:
-        python-version: 3.11.0
-
-    - name: Create SA Key to be used for GCP Authentication
-      run: |
-        echo ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }} | base64 --decode > sa_github_key.json
-
-    - name: GCP Auth with Service Account Key JSON
-      uses: google-github-actions/auth@v1
-      with:
-        credentials_json: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
-
-    - name: Set up Cloud SDK
-      uses: google-github-actions/setup-gcloud@v1
-      with:
-        project_id: mobile-doc-backend
+        credentials_json: '${{ secrets.GOOGLE_CREDENTIALS }}'
 
     - name: Install dependencies
       run: |

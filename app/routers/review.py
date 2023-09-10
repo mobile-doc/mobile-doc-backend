@@ -193,3 +193,59 @@ async def get_pending_peer_reviews(
             "pending_peer_reviews": pending_peer_reviews,
             "message": f"Found {len(pending_peer_reviews)} pending peer reviews for doctor_id='{doctor_id}'",
         }
+
+
+@router.post(
+    "/review/submit/{session_id}",
+    tags=["Review"],
+    summary="Submit a review for a session (only for doctor)",
+)
+async def submit_review(
+    session_id: str,
+    review: str,
+    auth_id=Depends(auth_handler.auth_wrapper),
+):
+    custom_logger.info(f"submit_review endpoint called for session_id={session_id}")
+    db = get_db()
+    db_result = db.review.find_one(
+        filter={"session_id": session_id}, projection={"_id": 0}
+    )
+
+    if db_result == None:
+        custom_logger.info(f"Review for session id='{session_id}' not found")
+        raise HTTPException(
+            status_code=404,
+            detail=f"Review for session id='{session_id}' not found. You can request a review using /review/request/{session_id}",
+        )
+
+    session_review = Review.parse_obj(db_result)
+
+    if auth_id not in session_review.requested_reviewer_ids:
+        custom_logger.error(
+            f"{auth_id} is trying to perform action on session='{session_id}'"
+        )
+        raise HTTPException(status_code=403, detail="Unauthorized action")
+
+    session_review.requested_reviewer_ids.remove(auth_id)
+
+    session_review.reviews.append({"reviewer_id": auth_id, "review": review})
+
+    session_review = jsonable_encoder(session_review)
+
+    db_update = db.review.update_one(
+        filter={"session_id": session_id},
+        update={"$set": session_review},
+    )
+
+    if db_update.modified_count == 0:
+        custom_logger.error(f"review update failed for session_id={session_id}")
+        return {
+            "success": False,
+            "message": f"review update failed for session_id={session_id}",
+        }
+    else:
+        return {
+            "success": True,
+            "session_id": session_id,
+            "message": "Review submitted successfully",
+        }

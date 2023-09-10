@@ -10,6 +10,7 @@ from .routers import (
     test_result,
     review,
     upload_file,
+    notification,
 )
 from .constants import PROJECT_NAME, VERSION_NAME
 
@@ -18,6 +19,7 @@ def start_application(title, version):
     application = FastAPI(title=title, version=version)
     application.include_router(status.router)
     application.include_router(authentication.router)
+    application.include_router(notification.router)
     application.include_router(patient.router)
     application.include_router(medicine.router)
     application.include_router(session.router)

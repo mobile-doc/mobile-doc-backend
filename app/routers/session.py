@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from fastapi.encoders import jsonable_encoder
 from ..app_models.EHR import Session, SymptomEntry, Prescription, UpdateSessionTimeInput
 from ..app_models.doctor import SessionDetails
+from ..app_models.notification import Notification
 import uuid
 from ..util import get_db, custom_logger, AuthHandler
 
@@ -29,7 +30,7 @@ async def create_session(
         )
 
     if patient_id != auth_id:
-        custom_logger.error(f"{auth_id} is tring to perform action of {patient_id}")
+        custom_logger.error(f"{auth_id} is trying to perform action of {patient_id}")
         raise HTTPException(status_code=403, detail="Unauthorized action")
 
     session_id = uuid.uuid4().hex
@@ -39,6 +40,11 @@ async def create_session(
     insert_result = db.session.insert_one(created_session)
 
     if insert_result.acknowledged:
+        notification = Notification(
+            message="New session created", session_id=session_id, user_id=patient_id
+        )
+        notification = jsonable_encoder(notification)
+        db.notification.insert_one(notification)
         return {
             "success": True,
             "created_session_id": session_id,
@@ -339,7 +345,7 @@ async def update_session_doctor(
 
     if db_result["patient_id"] != auth_id:
         custom_logger.error(
-            f"{auth_id} is tring to perform action on session='{session_id}'"
+            f"{auth_id} is trying to perform action on session='{session_id}'"
         )
         raise HTTPException(status_code=403, detail="Unauthorized action")
 
@@ -401,7 +407,7 @@ async def update_video_call_link(
 
     if db_result["patient_id"] != auth_id and db_result["doctor_id"] != auth_id:
         custom_logger.error(
-            f"{auth_id} is tring to perform action on session='{session_id}'"
+            f"{auth_id} is trying to perform action on session='{session_id}'"
         )
         raise HTTPException(status_code=403, detail="Unauthorized action")
 
@@ -453,7 +459,7 @@ async def update_prescription(
 
     if db_result["doctor_id"] != auth_id:
         custom_logger.error(
-            f"{auth_id} is tring to perform action on session='{session_id}'"
+            f"{auth_id} is trying to perform action on session='{session_id}'"
         )
         raise HTTPException(status_code=403, detail="Unauthorized action")
 

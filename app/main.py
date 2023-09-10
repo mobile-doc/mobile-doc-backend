@@ -9,6 +9,7 @@ from .routers import (
     authentication,
     test_result,
     review,
+    upload_file,
 )
 from .constants import PROJECT_NAME, VERSION_NAME
 
@@ -23,6 +24,7 @@ def start_application(title, version):
     application.include_router(doctor.router)
     application.include_router(test_result.router)
     application.include_router(review.router)
+    application.include_router(upload_file.router)
     return application
 
 

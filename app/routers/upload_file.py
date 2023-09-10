@@ -5,9 +5,9 @@ from google.cloud import storage
 import os
 import uuid
 
-os.environ[
-    "GOOGLE_APPLICATION_CREDENTIALS"
-] = "/home/mmk/Downloads/mobile-doc-backend-analytics-sa.json"
+# os.environ[
+#     "GOOGLE_APPLICATION_CREDENTIALS"
+# ] = "/home/mmk/Downloads/mobile-doc-backend-analytics-sa.json"
 
 router = APIRouter()
 auth_handler = AuthHandler()

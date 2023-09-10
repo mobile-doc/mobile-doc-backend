@@ -14,10 +14,10 @@ router = APIRouter()
 )
 async def login(login_input: LoginInput):
     db = get_db()
-    patient_db_reult = db.patient.find_one({"patient_id": login_input.id})
+    patient_db_result = db.patient.find_one({"patient_id": login_input.id})
 
-    if patient_db_reult:
-        hashed_pass = patient_db_reult["password"]
+    if patient_db_result:
+        hashed_pass = patient_db_result["password"]
         if auth_handler.verify_password(login_input.password, hashed_pass):
             token = auth_handler.encode_token(login_input.id)
             return {"token": token, "type": "patient"}

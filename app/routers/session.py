@@ -184,7 +184,7 @@ async def get_suggested_doctors(
 
     if db_result["patient_id"] != auth_id:
         custom_logger.error(
-            f"{auth_id} is tring to perform action on session='{session_id}'"
+            f"{auth_id} is trying to perform action on session='{session_id}'"
         )
         raise HTTPException(status_code=403, detail="Unauthorized action")
 
@@ -260,7 +260,7 @@ async def update_session_time(
 
     if db_result["patient_id"] != auth_id and db_result["doctor_id"] != auth_id:
         custom_logger.error(
-            f"{auth_id} is tring to perform action on session='{session_id}'"
+            f"{auth_id} is trying to perform action on session='{session_id}'"
         )
         raise HTTPException(status_code=403, detail="Unauthorized action")
 

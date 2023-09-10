@@ -8,7 +8,7 @@ from .routers import (
     doctor,
     authentication,
     test_result,
-    random_router,
+    review,
 )
 from .constants import PROJECT_NAME, VERSION_NAME
 
@@ -22,7 +22,7 @@ def start_application(title, version):
     application.include_router(session.router)
     application.include_router(doctor.router)
     application.include_router(test_result.router)
-    application.include_router(random_router.router)
+    application.include_router(review.router)
     return application
 
 

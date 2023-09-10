@@ -18,6 +18,20 @@ jobs:
       with:
         python-version: 3.11.0
 
+    - name: Create SA Key to be used for GCP Authentication
+      run: |
+        echo ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }} | base64 --decode > sa_github_key.json
+
+    - name: GCP Auth with Service Account Key JSON
+      uses: google-github-actions/auth@v1
+      with:
+        credentials_json: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v1
+      with:
+        project_id: mobile-doc-backend
+
     - name: Install dependencies
       run: |
         echo "upgrading pip"
@@ -28,11 +42,6 @@ jobs:
         pip install -r requirements.txt
         echo "Installing httpx, pytest, asyncio anyio"
         pip install httpx==0.23.1 pytest==7.2.0 pytest-asyncio==0.20.2 anyio==3.6.2
-
-    - name: Setup GCloud authentication
-      run: |
-        echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}" > /tmp/gcloud.json
-        gcloud auth activate-service-account --key-file=/tmp/gcloud.json
     
     - name: Test with pytest
       run: |

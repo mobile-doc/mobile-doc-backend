@@ -111,3 +111,85 @@ async def request_review(
             "session_id": session_id,
             "message": "Review requested successfully",
         }
+
+
+@router.get(
+    "/review/{session_id}",
+    tags=["Review"],
+    summary="Get review for a session (only for patient))",
+)
+async def get_review(
+    session_id: str,
+    auth_id=Depends(auth_handler.auth_wrapper),
+):
+    custom_logger.info(f"get_review endpoint called for session_id={session_id}")
+    db = get_db()
+    db_result = db.review.find_one(
+        filter={"session_id": session_id}, projection={"_id": 0}
+    )
+
+    if db_result == None:
+        custom_logger.info(f"Review for session id='{session_id}' not found")
+        raise HTTPException(
+            status_code=404,
+            detail=f"Review for session id='{session_id}' not found. You can request a review using /review/request/{session_id}",
+        )
+
+    session_review = Review.parse_obj(db_result)
+
+    db_result = db.session.find_one(
+        filter={"session_id": session_id}, projection={"_id": 0, "patient_id": 1}
+    )
+
+    if db_result["patient_id"] != auth_id:
+        custom_logger.error(
+            f"{auth_id} is trying to perform action on session='{session_id}'"
+        )
+        raise HTTPException(status_code=403, detail="Unauthorized action")
+
+    return {
+        "success": True,
+        "review": session_review.reviews,
+    }
+
+
+@router.get(
+    "/review/doctor/{doctor_id}",
+    tags=["Review"],
+    summary="Get pending peer reviews for a doctor",
+)
+async def get_pending_peer_reviews(
+    doctor_id: str,
+    auth_id=Depends(auth_handler.auth_wrapper),
+):
+    custom_logger.info(
+        f"get_pending_peer_reviews endpoint called for doctor_id={doctor_id}"
+    )
+    if doctor_id != auth_id:
+        custom_logger.error(
+            f"{auth_id} is trying to perform action on doctor_id='{doctor_id}'"
+        )
+        raise HTTPException(status_code=403, detail="Unauthorized action")
+
+    db = get_db()
+    db_result = db.review.find(
+        # filter out results where requested_reviewer_ids has doctor_id in it
+        filter={"requested_reviewer_ids": {"$in": [doctor_id]}},
+        projection={"_id": 0},
+    )
+
+    if db_result == None:
+        custom_logger.info(f"No pending peer reviews for doctor_id='{doctor_id}'")
+        return {
+            "success": True,
+            "pending_peer_reviews": [],
+            "message": f"No pending peer reviews for doctor_id='{doctor_id}'",
+        }
+
+    else:
+        pending_peer_reviews = [Review.parse_obj(x) for x in db_result]
+        return {
+            "success": True,
+            "pending_peer_reviews": pending_peer_reviews,
+            "message": f"Found {len(pending_peer_reviews)} pending peer reviews for doctor_id='{doctor_id}'",
+        }

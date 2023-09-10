@@ -31,7 +31,7 @@ jobs:
 
     - name: Setup GCloud authentication
       run: |
-        echo ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }} > /tmp/gcloud.json
+        echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}" > /tmp/gcloud.json
         gcloud auth activate-service-account --key-file=/tmp/gcloud.json
     
     - name: Test with pytest

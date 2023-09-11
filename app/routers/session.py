@@ -283,18 +283,19 @@ async def update_session_time(
     )
 
     # also update the doctor's calendar
-    doctor_calendar_pull = db.doctor.update_one(
-        {"doctor_id": session_doctor},
-        {
-            "$pull": {
-                "calendar": {
-                    "start_time": old_start_time,
-                    "end_time": old_end_time,
-                    "session_id": session_id,
+    if old_start_time:
+        doctor_calendar_pull = db.doctor.update_one(
+            {"doctor_id": session_doctor},
+            {
+                "$pull": {
+                    "calendar": {
+                        "start_time": old_start_time,
+                        "end_time": old_end_time,
+                        "session_id": session_id,
+                    }
                 }
-            }
-        },
-    )
+            },
+        )
     doctor_db_update = db.doctor.update_one(
         {"doctor_id": session_doctor},
         {

@@ -87,6 +87,7 @@ async def request_review(
     suggested_reviewers = [x["doctor_id"] for x in db_result]
     random.shuffle(suggested_reviewers)
     suggested_reviewers = suggested_reviewers[:2]
+    suggested_reviewers.append("BD001")  # only for demo purposes
 
     review = Review(
         session_id=session_id,

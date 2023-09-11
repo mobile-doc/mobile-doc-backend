@@ -37,11 +37,11 @@ async def request_review(
         )
         raise HTTPException(status_code=403, detail="Unauthorized action")
 
-    session_doctor = db_result["doctor_id"]
-    session_diagnosis = db_result["diagnosis"]
-    session_advice = db_result["advice"]
-    session_suggested_tests = db_result["suggested_test_list"]
-    symptom_dict_list = db_result["symptom_list"]
+    session_doctor = db_result.get("doctor_id", None)
+    session_diagnosis = db_result.get("diagnosis", None)
+    session_advice = db_result.get("advice", None)
+    session_suggested_tests = db_result.get("suggested_test_list", None)
+    symptom_dict_list = db_result.get("symptom_list", None)
     symptom_list = [x["symptom_name"] for x in symptom_dict_list]
     symptom_list = set(symptom_list)
 

@@ -62,7 +62,7 @@ async def get_patient(patient_id: str, auth_id=Depends(auth_handler.auth_wrapper
         custom_logger.error(f"{auth_id} is tring to perform action of {patient_id}")
         raise HTTPException(status_code=403, detail="Unauthorized action")
 
-    patient_redis_key = "patient_" + patient_id
+    patient_redis_key = "patient_" + patient_id.replace(" ", "_")
     cached_patient = redis_client.get(patient_redis_key)
 
     if cached_patient:
@@ -129,7 +129,7 @@ async def update_patient(
     update_query = {"$set": encoded_patient_details}
 
     # delete the redis cache
-    patient_redis_key = "patient_" + patient_id
+    patient_redis_key = "patient_" + patient_id.replace(" ", "_")
     redis_client.delete(patient_redis_key)
 
     update_result = db.patient.update_one({"patient_id": patient_id}, update_query)

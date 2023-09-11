@@ -1,6 +1,7 @@
 from pydantic import BaseModel, constr
 from typing import Optional, List
 from datetime import datetime
+import uuid
 
 
 class Medicine(BaseModel):
@@ -82,6 +83,8 @@ class TestFileEntry(BaseModel):
 
 
 class TestResult(BaseModel):
+    test_result_id: Optional[str] = uuid.uuid4().hex
+    patient_id: Optional[str]
     test_name: str
     test_center: Optional[str]
     date: datetime
@@ -99,6 +102,7 @@ class TestResultInput(BaseModel):
             "example": {
                 "schema_name": "CBC",
                 "test_result": {
+                    "patient_id": "0001",
                     "test_name": "CBC (Complete Blood Count)",
                     "test_center": "Ibn Sina Diagonistics Center",
                     "date": "2023-08-21T00:00:00",

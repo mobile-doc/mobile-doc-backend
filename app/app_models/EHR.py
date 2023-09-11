@@ -33,7 +33,7 @@ class Session(BaseModel):
     doctor_id: Optional[str]  # Need to create a session before selecting doctor.
     start_time: Optional[datetime]
     end_time: Optional[datetime]
-    video_call_link: Optional[str]
+    video_call_link: Optional[str] = "https://meet.google.com/rzd-yvri-zog"
     diagnosis: Optional[str]
     advice: Optional[str]
     symptom_list: Optional[List[SymptomEntry]] = []

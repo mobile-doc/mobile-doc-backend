@@ -8,7 +8,7 @@ from ..app_models.patient import (
 from ..app_models.EHR import TestResult, Session
 import pickle
 import json
-from ..util import get_db, custom_logger, redis_client, AuthHandler
+from ..util import get_db, custom_logger, AuthHandler
 
 auth_handler = AuthHandler()
 
@@ -62,50 +62,27 @@ async def get_patient(patient_id: str, auth_id=Depends(auth_handler.auth_wrapper
         custom_logger.error(f"{auth_id} is tring to perform action of {patient_id}")
         raise HTTPException(status_code=403, detail="Unauthorized action")
 
-    patient_redis_key = "patient_" + patient_id
-    cached_patient = redis_client.get(patient_redis_key)
+    db = get_db()
+    db_result = db.patient.find_one({"patient_id": patient_id})
 
-    if cached_patient:
-        custom_logger.info(f"Cache Hit! Found cached data for {patient_redis_key=}")
-        patient_details = pickle.loads(cached_patient)
-
-        return {
-            "success": True,
-            "patient": patient_details,
-        }
-
-    else:
-        custom_logger.info(f"Cache Miss! {patient_redis_key=}")
-
-        db = get_db()
-        db_result = db.patient.find_one({"patient_id": patient_id})
-
-        if db_result == None:
-            custom_logger.info(f"Patient id='{patient_id}' not found")
-            raise HTTPException(
-                status_code=404, detail=f"Patient id='{patient_id}' not found"
-            )
-
-        try:
-            validated_result = PatientOutput.parse_raw(
-                json.dumps(db_result, default=str)
-            )
-        except:
-            custom_logger.error(
-                f"Validation error while parsing Patient data for patient_id='{patient_id}'"
-            )
-            validated_result = None
-
-        # write back to cache
-        redis_client.setex(
-            name=patient_redis_key,
-            value=pickle.dumps(validated_result),
-            time=120,
+    if db_result == None:
+        custom_logger.info(f"Patient id='{patient_id}' not found")
+        raise HTTPException(
+            status_code=404, detail=f"Patient id='{patient_id}' not found"
         )
-        return {
-            "success": True,
-            "patient": validated_result,
-        }
+
+    try:
+        validated_result = PatientOutput.parse_raw(json.dumps(db_result, default=str))
+    except:
+        custom_logger.error(
+            f"Validation error while parsing Patient data for patient_id='{patient_id}'"
+        )
+        validated_result = None
+
+    return {
+        "success": True,
+        "patient": validated_result,
+    }
 
 
 @router.put(
@@ -127,10 +104,6 @@ async def update_patient(
     encoded_patient_details = jsonable_encoder(patient_details)
 
     update_query = {"$set": encoded_patient_details}
-
-    # delete the redis cache
-    patient_redis_key = "patient_" + patient_id
-    redis_client.delete(patient_redis_key)
 
     update_result = db.patient.update_one({"patient_id": patient_id}, update_query)
 
